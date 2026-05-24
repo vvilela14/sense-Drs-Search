@@ -28,7 +28,7 @@
     /* NAV */
     .nav{height:72px;border-bottom:1px solid var(--hairline);position:sticky;top:0;background:var(--canvas);z-index:100;}
     .nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;}
-    .logo-img{height:30px;width:auto;}
+    .logo-img{height:36px;width:auto;}
     .nav-links{display:flex;gap:28px;}
     .nav-link{font-size:14px;font-weight:500;color:var(--body);transition:color .15s;}
     .nav-link:hover{color:var(--primary);}
@@ -37,14 +37,14 @@
     @media(max-width:640px){.nav-links{display:none;}}
     /* PAGE HERO */
     /* HERO */
-    .page-hero{position:relative;background:#f9f4ef;overflow:hidden;min-height:340px;display:flex;align-items:flex-end;}
+    .page-hero{position:relative;background:#f9f4ef;overflow:visible;min-height:340px;display:flex;align-items:flex-end;}
     .page-hero-inner{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:0;width:100%;padding:56px 0 0;}
     .page-hero-left{padding-bottom:0;}
     .page-hero h1{font-size:clamp(32px,4.5vw,54px);font-weight:800;margin:0 0 16px;letter-spacing:-.03em;color:var(--ink);line-height:1.05;}
     .page-hero p{font-size:16px;margin:0 0 0;color:var(--muted);max-width:480px;line-height:1.6;}
     .page-hero-right{position:relative;display:flex;justify-content:flex-end;align-items:flex-end;height:320px;}
     .hero-doctor-img{height:340px;width:auto;object-fit:contain;object-position:bottom center;position:relative;z-index:2;display:block;}
-    .hero-search-bar{position:relative;z-index:10;background:#fff;border-radius:16px;box-shadow:0 2px 24px rgba(0,0,0,.10);padding:20px 24px;display:grid;grid-template-columns:1fr 220px;gap:16px;margin:0 0 0;border:1px solid var(--hairline);}
+    .hero-search-bar{position:relative;z-index:10;background:#fff;border-radius:16px;box-shadow:0 2px 24px rgba(0,0,0,.10);padding:20px 24px;display:grid;grid-template-columns:1fr 220px;gap:16px;margin:0 0 32px;border:1px solid var(--hairline);}
     .hero-search-wrap{display:flex;flex-direction:column;gap:6px;}
     .hero-search-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
     .hero-search-input{border:none;outline:none;font-family:inherit;font-size:15px;color:var(--ink);background:transparent;display:flex;align-items:center;gap:8px;}
@@ -57,7 +57,7 @@
     .autocomplete-dropdown{
       position:absolute;top:calc(100% + 6px);left:0;right:0;
       background:#fff;border:1.5px solid var(--primary);border-radius:12px;
-      box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:200;
+      box-shadow:0 8px 48px rgba(0,0,0,.18);z-index:1000;
       max-height:320px;overflow-y:auto;display:none;
     }
     .autocomplete-dropdown.open{display:block;}
@@ -81,7 +81,7 @@
     }
 
     /* GRID — 2 cols */
-    .specialists-section{padding:40px 0 72px;}
+    .specialists-section{padding:32px 0 72px;}
     .specialists-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
     @media(max-width:860px){.specialists-grid{grid-template-columns:1fr;}}
     /* ── CARD — novo layout ── */
@@ -152,7 +152,7 @@
 </header>
 
 <section class="page-hero">
-  <div class="container" style="width:100%;">
+  <div class="container" style="width:100%;overflow:visible;">
     <div class="page-hero-inner">
       <div class="page-hero-left">
         <h1>Nunca foi tão fácil<br/>cuidar da saúde.</h1>
