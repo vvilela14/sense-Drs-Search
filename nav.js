@@ -19,7 +19,7 @@
       justify-content: space-between;
     }
     .sense-nav-logo img {
-      height: 104px;
+      height: 36px;
       width: auto;
       display: block;
     }
@@ -59,7 +59,7 @@
     }
     @media (max-width: 640px) {
       .sense-nav-links { display: none; }
-      .sense-nav-logo img { height: 72px; }
+      .sense-nav-logo img { height: 36px; }
     }
   `;
 
