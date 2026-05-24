@@ -43,10 +43,7 @@
     .page-hero h1{font-size:clamp(32px,4.5vw,54px);font-weight:800;margin:0 0 16px;letter-spacing:-.03em;color:var(--ink);line-height:1.05;}
     .page-hero p{font-size:16px;margin:0 0 0;color:var(--muted);max-width:480px;line-height:1.6;}
     .page-hero-right{position:relative;display:flex;justify-content:flex-end;align-items:flex-end;height:320px;}
-    .hero-doctor-img{height:100%;object-fit:contain;object-position:bottom;position:relative;z-index:2;}
-    .hero-deco-circle{position:absolute;right:-40px;top:20px;width:280px;height:280px;border-radius:50%;border:52px solid var(--primary);opacity:.85;z-index:1;}
-    .hero-deco-dash1{position:absolute;right:-20px;top:60px;width:48px;height:16px;background:var(--primary);border-radius:8px;transform:rotate(-20deg);z-index:3;}
-    .hero-deco-dash2{position:absolute;right:10px;top:20px;width:28px;height:10px;background:var(--primary);border-radius:6px;transform:rotate(-20deg);z-index:3;}
+    .hero-doctor-img{height:340px;width:auto;object-fit:contain;object-position:bottom center;position:relative;z-index:2;display:block;}
     .hero-search-bar{position:relative;z-index:10;background:#fff;border-radius:16px;box-shadow:0 2px 24px rgba(0,0,0,.10);padding:20px 24px;display:grid;grid-template-columns:1fr 220px;gap:16px;margin:0 0 0;border:1px solid var(--hairline);}
     .hero-search-wrap{display:flex;flex-direction:column;gap:6px;}
     .hero-search-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
@@ -82,20 +79,9 @@
       .page-hero-right{display:none;}
       .hero-search-bar{grid-template-columns:1fr;}
     }
-    /* FILTER BAR */
-    .filter-bar{background:var(--canvas);border-bottom:1px solid var(--hairline);padding:14px 0;position:sticky;top:72px;z-index:90;}
-    .filter-inner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-    .search-wrap{position:relative;flex:1;min-width:200px;}
-    .search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
-    .search-input{width:100%;padding:9px 13px 9px 38px;border:1.5px solid var(--hairline);border-radius:var(--r-full);font-size:14px;font-family:inherit;color:var(--ink);background:var(--surface-soft);outline:none;transition:border-color .15s;}
-    .search-input:focus{border-color:var(--primary);background:#fff;}
-    .filter-chips{display:flex;gap:6px;flex-wrap:wrap;}
-    .chip-btn{padding:6px 13px;border-radius:var(--r-full);border:1.5px solid var(--hairline);background:var(--canvas);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;}
-    .chip-btn:hover{border-color:var(--primary);color:var(--primary);}
-    .chip-btn.active{background:var(--primary);border-color:var(--primary);color:#fff;}
-    .results-count{font-size:13px;color:var(--muted);white-space:nowrap;}
+
     /* GRID — 2 cols */
-    .specialists-section{padding:32px 0 72px;}
+    .specialists-section{padding:40px 0 72px;}
     .specialists-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
     @media(max-width:860px){.specialists-grid{grid-template-columns:1fr;}}
     /* ── CARD — novo layout ── */
@@ -112,9 +98,9 @@
     }
     .doctor-card:hover{transform:translateY(-2px);box-shadow:rgba(0,0,0,.05) 0 0 0 1px,rgba(0,0,0,.1) 0 8px 20px;}
     /* foto */
-    .card-photo-wrap{width:88px;flex-shrink:0;background:var(--primary-cream);}
-    .doctor-photo{width:88px;height:100%;object-fit:cover;object-position:top;}
-    .doctor-avatar-placeholder{width:88px;height:100%;min-height:120px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:var(--primary);background:linear-gradient(135deg,var(--primary-cream),var(--pink-soft));}
+    .card-photo-wrap{width:100px;flex-shrink:0;background:transparent;display:flex;align-items:center;justify-content:center;padding:16px 0 16px 16px;}
+    .doctor-photo{width:80px;height:80px;border-radius:50%;object-fit:cover;object-position:top;border:2px solid var(--hairline);}
+    .doctor-avatar-placeholder{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:var(--primary);background:linear-gradient(135deg,var(--primary-cream),var(--pink-soft));flex-shrink:0;border:2px solid var(--hairline);}
     /* conteúdo */
     .card-content{flex:1;display:flex;flex-direction:column;min-width:0;padding:14px 16px 12px;}
     /* linha topo: nome + verified */
@@ -173,10 +159,7 @@
         <p>Agende sua consulta com os melhores profissionais da saúde.<br/>Escolha a especialidade e a data que melhor se adequa a você.</p>
       </div>
       <div class="page-hero-right">
-        <div class="hero-deco-circle"></div>
-        <div class="hero-deco-dash1"></div>
-        <div class="hero-deco-dash2"></div>
-        <img src="images/especialidades/cardiologia.png" alt="Médico" class="hero-doctor-img" onerror="this.style.display='none'"/>
+        <img src="images/brand/hero-medica.png" alt="Médica" class="hero-doctor-img"/>
       </div>
     </div>
     <!-- search bar integrada -->
@@ -202,57 +185,8 @@
     </div>
   </div>
 </section>
-<div class="filter-bar">
-  <div class="container filter-inner">
-    <div class="search-wrap" style="display:none;">
-      <input type="text" class="search-input" id="searchInputHidden"/>
-    </div>
-    <div class="filter-chips" id="filterChips"><button class="chip-btn active" data-filter="todos">Todos</button>
-<button class="chip-btn" data-filter="cirurgião-vascular">Cirurgião Vascular</button>
-<button class="chip-btn" data-filter="estética-avançada">Estética Avançada</button>
-<button class="chip-btn" data-filter="fisioterapeuta">Fisioterapeuta</button>
-<button class="chip-btn" data-filter="ginecologista">Ginecologista</button>
-<button class="chip-btn" data-filter="ginecologista-e-obstetra">Ginecologista e Obstetra</button>
-<button class="chip-btn" data-filter="infectologista">Infectologista</button>
-<button class="chip-btn" data-filter="médico-clínico-geral">Médico Clínico Geral</button>
-<button class="chip-btn" data-filter="neurologista">Neurologista</button>
-<button class="chip-btn" data-filter="ortopedista-e-traumatologista">Ortopedista e Traumatologista</button>
-<button class="chip-btn" data-filter="pediatria">Pediatria</button>
-<button class="chip-btn" data-filter="pneumologista">Pneumologista</button>
-<button class="chip-btn" data-filter="psicóloga">Psicóloga</button>
-<button class="chip-btn" data-filter="urologista">Urologista</button>
-</div>
-    <span class="results-count" id="resultsCount"></span>
-  </div>
-</div>
-<section class="specialists-section">
-  <div class="container">
-    <div class="specialists-grid" id="specialistsGrid">
-    <div class="doctor-card" data-name="dr. diogo pinheiro gouvêa" data-specialty="neurologista">
-      <div class="card-photo-wrap"><div class="doctor-avatar-placeholder">D</div></div>
-      <div class="card-content">
-        <div class="card-top-row">
-          <div>
-            <p class="doctor-name">Dr. Diogo Pinheiro Gouvêa</p>
-            <p class="doctor-specialty">Neurologista</p>
-          </div>
-          <span class="verified-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg> Verificado</span>
-        </div>
-        <p class="crm-tag">CRM 70616</p>
-        <div class="treat-row"><span class="treat-chip">Enxaqueca</span><span class="treat-chip">Dor Crônica</span><span class="treat-chip">Parkinson</span><span class="treat-chip">+10</span></div>
-        <div class="rating-row">
-          <span class="star">★★★★★</span>
-          <span class="rating-val">5.0</span>
-          <span class="rating-new">(Novo)</span>
-        </div>
-        <div class="card-footer">
-          <span></span>
-          <div class="card-actions">
-            <a href="diogo-pinheiro-gouvea-neurologista.html" class="btn-sm btn-outline-sm">Perfil <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
-            <a href="https://wa.me/5534999999999?text=Agendar%20com%20Dr.%20Diogo%20Pinheiro%20Gouvêa" target="_blank" class="btn-sm btn-primary-sm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Agendar</a>
-          </div>
-        </div>
-      </div>
+<div id="filterChips" style="display:none;"><button class="chip-btn active" data-filter="todos">Todos</button></div>
+<div id="resultsCount" style="display:none;"></div>
     </div>
     <div class="doctor-card" data-name="dra luciana pontes" data-specialty="ginecologista">
       <div class="card-photo-wrap"><div class="doctor-avatar-placeholder">A</div></div>
@@ -265,7 +199,7 @@
           <span class="verified-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg> Verificado</span>
         </div>
         <p class="crm-tag">CRM 81214 · RQE 58436</p>
-        <div class="treat-row"><span class="treat-chip">Exame clínico completo</span><span class="treat-chip">Exames preventivos e diagnós</span><span class="treat-chip">Consulta pré-concepcional</span><span class="treat-chip">+6</span><span class="badge-tele">📱 Tele</span></div>
+        <div class="treat-row"><span class="treat-chip">Exame clínico completo</span><span class="treat-chip">Exames preventivos e diagnós</span><span class="treat-chip">Consulta pré-concepcional</span><span class="treat-chip">+6</span></div>
         <div class="rating-row">
           <span class="star">★★★★★</span>
           <span class="rating-val">5.0</span>
@@ -291,7 +225,7 @@
           <span class="verified-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg> Verificado</span>
         </div>
         <p class="crm-tag">CRM 80493/MG</p>
-        <div class="treat-row"><span class="treat-chip">Acompanhamento de lesões lig</span><span class="badge-tele">📱 Tele</span></div>
+        <div class="treat-row"><span class="treat-chip">Acompanhamento de lesões lig</span></div>
         <div class="rating-row">
           <span class="star">★★★★★</span>
           <span class="rating-val">5.0</span>
@@ -395,7 +329,7 @@
           <span class="verified-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg> Verificado</span>
         </div>
         <p class="crm-tag">CRP 04/74994</p>
-        <div class="treat-row"><span class="treat-chip">atendo crianças e adolescent</span><span class="treat-chip">oferecendo um espaço seguro </span><span class="treat-chip">compreender desafios e forta</span><span class="treat-chip">+2</span><span class="badge-tele">📱 Tele</span></div>
+        <div class="treat-row"><span class="treat-chip">atendo crianças e adolescent</span><span class="treat-chip">oferecendo um espaço seguro </span><span class="treat-chip">compreender desafios e forta</span><span class="treat-chip">+2</span></div>
         <div class="rating-row">
           <span class="star">★★★★★</span>
           <span class="rating-val">5.0</span>
@@ -447,7 +381,7 @@
           <span class="verified-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg> Verificado</span>
         </div>
         <p class="crm-tag">CRM 84511 · RQE 49810</p>
-        <div class="treat-row"><span class="treat-chip">Tratamento Cirúrgico e Ambul</span><span class="treat-chip">Ultrassom com Doppler de Art</span><span class="treat-chip">Tratamento de Úlcera Venosa </span><span class="treat-chip">+2</span><span class="badge-tele">📱 Tele</span></div>
+        <div class="treat-row"><span class="treat-chip">Tratamento Cirúrgico e Ambul</span><span class="treat-chip">Ultrassom com Doppler de Art</span><span class="treat-chip">Tratamento de Úlcera Venosa </span><span class="treat-chip">+2</span></div>
         <div class="rating-row">
           <span class="star">★★★★★</span>
           <span class="rating-val">5.0</span>
@@ -551,7 +485,7 @@
           <span class="verified-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg> Verificado</span>
         </div>
         <p class="crm-tag">CRM 72307</p>
-        <div class="treat-row"><span class="treat-chip">Minha área de atuação é a Me</span><span class="badge-tele">📱 Tele</span></div>
+        <div class="treat-row"><span class="treat-chip">Minha área de atuação é a Me</span></div>
         <div class="rating-row">
           <span class="star">★★★★★</span>
           <span class="rating-val">5.0</span>
@@ -577,7 +511,7 @@
           <span class="verified-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg> Verificado</span>
         </div>
         <p class="crm-tag">CRP 18213</p>
-        <div class="treat-row"><span class="treat-chip">Transtorno de Ansiedade</span><span class="treat-chip">Transtorno Depressivo</span><span class="treat-chip">Transtorno de Personalidade</span><span class="badge-tele">📱 Tele</span></div>
+        <div class="treat-row"><span class="treat-chip">Transtorno de Ansiedade</span><span class="treat-chip">Transtorno Depressivo</span><span class="treat-chip">Transtorno de Personalidade</span></div>
         <div class="rating-row">
           <span class="star">★★★★★</span>
           <span class="rating-val">5.0</span>
