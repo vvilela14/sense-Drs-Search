@@ -36,12 +36,16 @@
     .nav-cta:hover{background:var(--primary-hover);}
     @media(max-width:640px){.nav-links{display:none;}}
     /* PAGE HERO */
-    .page-hero{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-hover) 100%);padding:52px 0 44px;color:#fff;}
-    .page-hero h1{font-size:clamp(26px,4vw,40px);font-weight:800;margin:0 0 8px;letter-spacing:-.02em;}
-    .page-hero p{font-size:16px;margin:0;opacity:.88;}
-    .hero-stats{display:flex;gap:28px;margin-top:24px;flex-wrap:wrap;}
-    .hero-stat-val{font-size:26px;font-weight:800;}
-    .hero-stat-label{font-size:12px;opacity:.75;margin-top:2px;}
+    .page-hero{position:relative;min-height:480px;display:flex;align-items:center;overflow:hidden;background:#071527;}
+    .page-hero-bg{position:absolute;inset:0;background-image:url('images/especialidades/cardiologia.png');background-size:cover;background-position:center 20%;opacity:.22;filter:grayscale(20%);}
+    .page-hero-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,21,39,.95) 0%,rgba(7,21,39,.75) 55%,rgba(7,21,39,.25) 100%);}
+    .page-hero-content{position:relative;z-index:2;padding:80px 0 72px;}
+    .page-hero h1{font-size:clamp(28px,4vw,48px);font-weight:800;margin:0 0 10px;letter-spacing:-.02em;color:#fff;}
+    .page-hero h1 em{color:var(--primary-soft);font-style:normal;}
+    .page-hero p{font-size:16px;margin:0;color:rgba(255,255,255,.78);}
+    .hero-stats{display:flex;gap:32px;margin-top:28px;flex-wrap:wrap;}
+    .hero-stat-val{font-size:28px;font-weight:800;color:#fff;}
+    .hero-stat-label{font-size:12px;color:rgba(255,255,255,.65);margin-top:2px;}
     /* FILTER BAR */
     .filter-bar{background:var(--canvas);border-bottom:1px solid var(--hairline);padding:14px 0;position:sticky;top:72px;z-index:90;}
     .filter-inner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
@@ -126,12 +130,14 @@
 </header>
 
 <section class="page-hero">
-  <div class="container">
-    <h1>Encontre um Especialista</h1>
+  <div class="page-hero-bg"></div>
+  <div class="page-hero-overlay"></div>
+  <div class="container page-hero-content">
+    <h1>Cuidar da sua saúde<br/>nunca foi tão <em>fácil.</em></h1>
     <p>Profissionais verificados, atendimento humanizado. Todos num só lugar.</p>
     <div class="hero-stats">
       <div><div class="hero-stat-val">14</div><div class="hero-stat-label">Especialistas</div></div>
-      <div><div class="hero-stat-val">12+</div><div class="hero-stat-label">Especialidades</div></div>
+      <div><div class="hero-stat-val">60+</div><div class="hero-stat-label">Especialidades</div></div>
       <div><div class="hero-stat-val">5.0</div><div class="hero-stat-label">Avaliação média</div></div>
     </div>
   </div>
