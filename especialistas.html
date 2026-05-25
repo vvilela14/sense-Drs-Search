@@ -27,8 +27,7 @@
     .container{max-width:1200px;margin:0 auto;padding:0 24px;}
     /* NAV */
     .nav{height:72px;border-bottom:1px solid var(--hairline);position:sticky;top:0;background:var(--canvas);z-index:100;}
-    .nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;}
-    .nav-right-esp{display:flex;align-items:center;gap:28px;}
+    .nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;}
     .logo-img{height:36px;width:auto;}
     .nav-links{display:flex;gap:28px;}
     .nav-link{font-size:14px;font-weight:500;color:var(--body);transition:color .15s;}
@@ -146,11 +145,13 @@
 <header class="nav">
   <div class="container nav-inner">
     <a href="index.html"><img src="images/brand/sense-logo.png" alt="Sense" class="logo-img"/></a>
-    <nav class="nav-links">
-      <a href="index.html#especialidades" class="nav-link">Especialidades</a>
-      <a href="especialistas.html" class="nav-link">Profissionais</a>
-    </nav>
-    <a href="https://api.whatsapp.com/send/?phone=5534999593207&text&type=phone_number&app_absent=0" target="_blank" rel="noopener" class="nav-cta">Agendar Consulta</a>
+    <div class="nav-right">
+      <nav class="nav-links">
+        <a href="index.html#especialidades" class="nav-link">Especialidades</a>
+        <a href="especialistas.html" class="nav-link">Profissionais</a>
+      </nav>
+      <a href="https://api.whatsapp.com/send/?phone=5534999593207&text&type=phone_number&app_absent=0" target="_blank" rel="noopener" class="nav-cta">Agendar Consulta</a>
+    </div>
   </div>
 </header>
 
