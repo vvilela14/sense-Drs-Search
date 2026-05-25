@@ -23,9 +23,14 @@
       width: auto;
       display: block;
     }
+    .sense-nav-right {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
     .sense-nav-links {
       display: flex;
-      gap: 40px;
+      gap: 28px;
       align-items: center;
       list-style: none;
       margin: 0;
@@ -63,16 +68,11 @@
     }
   `;
 
-  // Inject CSS
   var style = document.createElement('style');
   style.textContent = css;
   document.head.appendChild(style);
 
-  // Detect base path (for pages in root vs subdirs)
   var base = '';
-
-  // Build nav HTML
-  var isHome = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
   var nav = document.createElement('header');
   nav.className = 'sense-nav';
   nav.innerHTML = `
@@ -80,20 +80,21 @@
       <a href="${base}index.html" class="sense-nav-logo" aria-label="Sense">
         <img src="${base}images/brand/sense-logo.png" alt="Sense" />
       </a>
-      <nav>
-        <ul class="sense-nav-links">
-          <li><a href="${base}index.html#especialidades">Especialidades</a></li>
-          <li><a href="${base}index.html#exames">Exames</a></li>
-          <li><a href="${base}index.html#checkup">Check-up</a></li>
-        </ul>
-      </nav>
-      <a href="${base}especialistas.html" class="sense-nav-cta">
-        Encontre um Especialista
-      </a>
+      <div class="sense-nav-right">
+        <nav>
+          <ul class="sense-nav-links">
+            <li><a href="${base}especialistas">Especialidades</a></li>
+            <li><a href="${base}index.html#exames">Exames</a></li>
+            <li><a href="${base}index.html#checkup">Check-up</a></li>
+          </ul>
+        </nav>
+        <a href="https://api.whatsapp.com/send/?phone=5534999593207&text&type=phone_number&app_absent=0" target="_blank" rel="noopener" class="sense-nav-cta">
+          Agendar Consulta
+        </a>
+      </div>
     </div>
   `;
 
-  // Replace existing nav or prepend
   var existing = document.querySelector('header');
   if (existing) {
     existing.parentNode.replaceChild(nav, existing);
