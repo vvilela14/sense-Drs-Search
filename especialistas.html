@@ -34,6 +34,10 @@
     .nav-link:hover{color:var(--primary);}
     .nav-cta{background:var(--primary);color:#fff;font-size:14px;font-weight:700;padding:9px 18px;border-radius:var(--r-full);transition:background .15s;white-space:nowrap;}
     .nav-cta:hover{background:var(--primary-hover);}
+    .nav-secondary{display:inline-flex;align-items:center;gap:7px;background:#fff;color:var(--ink);font-size:14px;font-weight:600;padding:8px 16px;border-radius:var(--r-full);border:1.5px solid var(--hairline);text-decoration:none;transition:border-color .15s;white-space:nowrap;}
+    .nav-secondary:hover{border-color:var(--ink);}
+    .nav-secondary svg{flex-shrink:0;}
+    @media(max-width:640px){.nav-secondary span{display:none;}.nav-secondary{padding:8px 11px;}}
     @media(max-width:640px){.nav-links{display:none;}}
     /* PAGE HERO */
     /* HERO */
@@ -146,11 +150,12 @@
 <header class="nav">
   <div class="container nav-inner">
     <a href="index.html"><img src="images/brand/sense-logo.png" alt="Sense" class="logo-img"/></a>
-    <div style="display:flex;align-items:center;gap:28px;">
+    <div style="display:flex;align-items:center;gap:16px;">
       <nav class="nav-links">
         <a href="index.html#especialidades" class="nav-link">Especialidades</a>
         <a href="especialistas.html" class="nav-link">Profissionais</a>
       </nav>
+      <a href="area-profissional.html" class="nav-secondary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Área do Profissional</span></a>
       <a href="https://api.whatsapp.com/send/?phone=5534999593207&text&type=phone_number&app_absent=0" target="_blank" rel="noopener" class="nav-cta">Agendar Consulta</a>
     </div>
   </div>

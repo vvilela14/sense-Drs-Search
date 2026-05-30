@@ -110,6 +110,10 @@
       background: var(--primary-hover);
       transform: translateY(-1px);
     }
+    .nav-secondary{display:inline-flex;align-items:center;gap:7px;background:#fff;color:#062533;font-size:14px;font-weight:600;padding:10px 18px;border-radius:9999px;border:1.5px solid #eaeaea;text-decoration:none;transition:border-color .15s;white-space:nowrap;}
+    .nav-secondary:hover{border-color:#062533;}
+    .nav-secondary svg{flex-shrink:0;}
+    @media(max-width:640px){.nav-secondary span{display:none;}.nav-secondary{padding:10px 12px;}}
 
     /* ---------- floating WhatsApp button ---------- */
     .floating-wa {
@@ -1022,6 +1026,10 @@
           <a href="#exames" class="nav-link">Exames</a>
           <a href="#checkup" class="nav-link">Check-up</a>
         </nav>
+        <a href="area-profissional.html" class="nav-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Área do Profissional</span>
+        </a>
         <a href="especialistas" class="nav-cta">
           Encontre um Especialista
         </a>
