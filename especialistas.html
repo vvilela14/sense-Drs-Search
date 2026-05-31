@@ -45,8 +45,8 @@
     .nav-mobile-menu a:last-child{border-bottom:none;}
     @media(max-width:640px){
       .nav-links{display:none!important;}
-      .nav-secondary span{display:none;}
-      .nav-secondary{padding:8px 11px;}
+      .nav-secondary{display:none!important;}
+      .nav-cta{display:none!important;}
       .nav-ham{display:flex;}
       .nav{position:relative;}
     }
@@ -88,8 +88,8 @@
     .autocomplete-dropdown::-webkit-scrollbar{width:5px;}
     .autocomplete-dropdown::-webkit-scrollbar-thumb{background:var(--hairline);border-radius:4px;}
     .ac-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0;display:none;}
-    .hero-date-wrap{display:flex;flex-direction:column;gap:6px;}
-    .hero-date-inner{display:flex;align-items:center;gap:8px;border:1.5px solid var(--hairline);border-radius:10px;padding:10px 14px;color:var(--muted);font-size:14px;}
+    
+    
     @media(max-width:800px){
       .page-hero-inner{grid-template-columns:1fr;}
       .page-hero-right{display:none;}
@@ -204,13 +204,6 @@
             <button class="ac-clear" id="acClear" title="Limpar">✕</button>
             <div class="autocomplete-dropdown" id="acDropdown"></div>
           </div>
-        </div>
-      </div>
-      <div class="hero-date-wrap">
-        <span class="hero-search-label">Data</span>
-        <div class="hero-date-inner">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Selecione uma data
         </div>
       </div>
     </div>

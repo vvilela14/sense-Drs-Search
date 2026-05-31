@@ -133,7 +133,7 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
 
 <header class="nav">
   <div class="container">
-    <img src="images/brand/sense-logo.png" alt="Sense" class="nav-logo"/>
+    <a href="index.html"><img src="images/brand/sense-logo.png" alt="Sense" class="nav-logo"/></a>
     <div class="nav-user" id="navUser" style="display:none">
       <span id="navEmail"></span>
       <a class="nav-logout" id="btnLogout">Sair</a>
@@ -179,7 +179,28 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
     </div>
     <p class="hint" id="passReq" style="display:none;margin-bottom:18px;line-height:1.5">A senha precisa ter ao menos: <b>6 caracteres</b>, <b>uma letra minúscula</b> e <b>um caractere especial</b> (ex: ! @ # $ %).</p>
     <button class="btn-primary" id="btnAuth" style="width:100%">Entrar</button>
-    <p class="hint" id="authHint" style="text-align:center;margin-top:14px"></p>
+    <p style="text-align:center;margin-top:14px"><a href="#" id="linkForgot" style="font-size:13px;color:var(--primary);font-weight:600;">Esqueci minha senha</a></p>
+    <p class="hint" id="authHint" style="text-align:center;margin-top:8px"></p>
+  </div>
+</div>
+
+<!-- RESET DE SENHA (quando volta pelo link do e-mail) -->
+<div id="reset-screen" style="display:none;min-height:calc(100vh - 64px);align-items:center;justify-content:center;padding:32px 20px;">
+  <div class="auth-card">
+    <img src="images/brand/sense-logo.png" alt="Sense" class="auth-logo"/>
+    <h1>Criar nova senha</h1>
+    <p class="sub">Defina uma nova senha para sua conta.</p>
+    <div class="field" style="margin-bottom:14px">
+      <label>Nova senha</label>
+      <input type="password" id="newPass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
+    </div>
+    <div class="field" style="margin-bottom:8px">
+      <label>Confirmar nova senha</label>
+      <input type="password" id="newPassConfirm" placeholder="Digite novamente" autocomplete="new-password"/>
+    </div>
+    <p class="hint" style="margin-bottom:18px;line-height:1.5">A senha precisa ter ao menos: <b>6 caracteres</b>, <b>uma letra minúscula</b> e <b>um caractere especial</b> (ex: ! @ # $ %).</p>
+    <button class="btn-primary" id="btnNewPass" style="width:100%">Salvar nova senha</button>
+    <p class="hint" id="resetHint" style="text-align:center;margin-top:14px"></p>
   </div>
 </div>
 
@@ -521,6 +542,47 @@ $('btnPreview').onclick=()=>{
 };
 
 /* ---------- BOOT ---------- */
+// === #2: Recuperação de senha ===
+const REDIRECT_URL = window.location.origin + window.location.pathname;
+let isRecovery = false;
+
+$('linkForgot').onclick=async(e)=>{
+  e.preventDefault();
+  const email=$('authEmail').value.trim();
+  if(!email){$('authHint').textContent='Digite seu e-mail acima e clique novamente em "Esqueci minha senha".';return;}
+  $('linkForgot').textContent='Enviando…';
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:REDIRECT_URL});
+  $('linkForgot').textContent='Esqueci minha senha';
+  if(error){$('authHint').textContent='Erro: '+error.message;return;}
+  $('authHint').innerHTML='<span style="color:var(--ok)">Enviamos um link de recuperação para '+email+'. Verifique seu e-mail.</span>';
+};
+
+// Detecta retorno pelo link de recuperação
+sb.auth.onAuthStateChange((event)=>{
+  if(event==='PASSWORD_RECOVERY'){
+    isRecovery=true;
+    $('loading').style.display='none';
+    $('auth-screen').style.display='none';
+    $('app').style.display='none';
+    $('reset-screen').style.display='flex';
+  }
+});
+
+$('btnNewPass').onclick=async()=>{
+  const p1=$('newPass').value, p2=$('newPassConfirm').value;
+  if(p1.length<6){$('resetHint').textContent='A senha precisa de ao menos 6 caracteres.';return;}
+  if(!/[a-z]/.test(p1)){$('resetHint').textContent='Inclua ao menos uma letra minúscula.';return;}
+  if(!/[^A-Za-z0-9]/.test(p1)){$('resetHint').textContent='Inclua ao menos um caractere especial.';return;}
+  if(p1!==p2){$('resetHint').textContent='As senhas não conferem.';return;}
+  $('btnNewPass').disabled=true;$('btnNewPass').textContent='Salvando…';
+  const {error}=await sb.auth.updateUser({password:p1});
+  $('btnNewPass').disabled=false;$('btnNewPass').textContent='Salvar nova senha';
+  if(error){$('resetHint').textContent='Erro: '+error.message;return;}
+  $('resetHint').innerHTML='<span style="color:var(--ok)">Senha atualizada! Redirecionando…</span>';
+  isRecovery=false;
+  setTimeout(()=>{$('reset-screen').style.display='none';boot();},1500);
+};
+
 function toggleMobileMenu(){
   const m=document.getElementById('mobileMenu');
   m.classList.toggle('open');
@@ -530,6 +592,7 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('#navHam')&&!e.target.closest('#mobileMenu'))m.classList.remove('open');
 });
 async function boot(){
+  if(isRecovery)return;
   const {data:{session}}=await sb.auth.getSession();
   $('loading').style.display='none';
   if(!session){$('auth-screen').style.display='flex';return;}

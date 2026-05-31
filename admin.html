@@ -193,6 +193,10 @@ tr:hover td{background:rgba(6,37,51,.02);}
         <option>Nutricionista</option><option>Psicólogo</option><option>Enfermeiro</option>
         <option>Bioquímico</option><option>Outro</option>
       </select>
+      <select class="filter-select" id="filterEsp">
+        <option value="all">Todas as especialidades</option>
+        <option>Acupunturista</option><option>Alergista e Imunologista</option><option>Anestesiologista</option><option>Angiologista</option><option>Cardiologista</option><option>Cirurgião do Aparelho Digestivo</option><option>Cirurgião Geral</option><option>Cirurgião Oncológico</option><option>Cirurgião Pediátrico</option><option>Cirurgião Plástico</option><option>Cirurgião Torácico</option><option>Cirurgião Vascular</option><option>Clínico Médico (ou Clínico Geral)</option><option>Coloproctologista</option><option>Dermatologista</option><option>Endocrinologista</option><option>Endoscopista</option><option>Estética Avançada</option><option>Gastroenterologista</option><option>Geneticista Médico</option><option>Geriatra</option><option>Ginecologista e Obstetra</option><option>Hematologista Hemoterapeuta</option><option>Homeopata</option><option>Infectologista</option><option>Mastologista</option><option>Médico Emergencista</option><option>Médico de Família e Comunidade</option><option>Médico do Trabalho</option><option>Médico de Tráfego</option><option>Médico do Esporte</option><option>Médico Físico e Reabilitador</option><option>Médico Intensivista</option><option>Médico Legal e Perito Médico</option><option>Médico Nuclear</option><option>Médico Preventivista e Social</option><option>Nefrologista</option><option>Neurocirurgião</option><option>Neurologista</option><option>Nutrólogo</option><option>Oftalmologista</option><option>Oncologista Clínico</option><option>Ortopedista e Traumatologista</option><option>Otorrinolaringologista</option><option>Patologista</option><option>Patologista Clínico/Lab.</option><option>Pediatra</option><option>Pneumologista</option><option>Psiquiatra</option><option>Radiologista e Diagnóstico por Imagem</option><option>Radioterapeuta</option><option>Reumatologista</option><option>Urologista</option><option>Fisioterapeuta</option><option>Psicóloga</option><option>Psicólogo</option><option>Nutricionista</option><option>Dentista</option><option>Enfermeiro</option><option>Médico Clínico Geral</option>
+      </select>
     </div>
 
     <div class="table-wrap">
@@ -309,12 +313,13 @@ $('btnLogout').onclick=async()=>{await sb.auth.signOut();location.reload();};
 function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
 function filtered(){
   const q=norm($('searchInput').value.trim());
-  const fs=$('filterStatus').value, fc=$('filterCat').value;
+  const fs=$('filterStatus').value, fc=$('filterCat').value, fe=$('filterEsp').value;
   return allProfs.filter(p=>{
     const nq=!q||norm(p.nome_completo).includes(q)||norm(p.especialidade).includes(q);
     const fs2=fs==='all'||(fs==='pub'&&p.publicado)||(fs==='ocul'&&!p.publicado);
     const fc2=fc==='all'||p.categoria===fc;
-    return nq&&fs2&&fc2;
+    const fe2=fe==='all'||norm(p.especialidade).includes(norm(fe));
+    return nq&&fs2&&fc2&&fe2;
   });
 }
 
@@ -445,6 +450,7 @@ $('confirmModal').addEventListener('click',e=>{if(e.target===$('confirmModal'))c
 $('searchInput').addEventListener('input',renderTable);
 $('filterStatus').addEventListener('change',renderTable);
 $('filterCat').addEventListener('change',renderTable);
+$('filterEsp').addEventListener('change',renderTable);
 
 /* ---- BOOT ---- */
 async function boot(){
