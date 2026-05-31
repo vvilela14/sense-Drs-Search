@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Admin — Sense</title>
+<link rel="icon" type="image/png" href="images/brand/Sense-icon-S.png"/>
+<link rel="preconnect" href="https://api.fontshare.com"/>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800&display=swap"/>
+<style>
+:root{
+  --primary:#e06253;--primary-hover:#c64f41;--ink:#062533;--muted:#6a7a85;
+  --hairline:#eaeaea;--surface:#f7f7f7;--canvas:#fff;--ok:#16a34a;--err:#dc2626;--warn:#b45309;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-full:9999px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Satoshi',-apple-system,sans-serif;color:var(--ink);background:var(--surface);-webkit-font-smoothing:antialiased;}
+a{text-decoration:none;color:inherit;}
+button{font:inherit;cursor:pointer;border:none;}
+.container{max-width:1100px;margin:0 auto;padding:0 20px;}
+
+/* NAV */
+.nav{height:60px;background:var(--canvas);border-bottom:1px solid var(--hairline);display:flex;align-items:center;}
+.nav .container{display:flex;align-items:center;justify-content:space-between;width:100%;}
+.nav-logo{height:26px;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.admin-badge{background:rgba(224,98,83,.1);color:var(--primary);font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);letter-spacing:.03em;}
+.btn-sm{padding:8px 16px;border-radius:var(--r-full);font-size:13px;font-weight:600;}
+.btn-logout{background:var(--surface);color:var(--ink);}
+.btn-logout:hover{background:var(--hairline);}
+
+/* AUTH */
+#auth-screen{display:none;min-height:calc(100vh - 60px);align-items:center;justify-content:center;padding:24px;}
+.auth-card{background:var(--canvas);border:1px solid var(--hairline);border-radius:var(--r-lg);padding:36px 32px;max-width:380px;width:100%;}
+.auth-card h2{font-size:20px;font-weight:800;margin-bottom:4px;}
+.auth-card p{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);opacity:.6;}
+input[type=email],input[type=password]{padding:10px 12px;border:1.5px solid var(--hairline);border-radius:10px;font-size:14px;font-family:inherit;outline:none;transition:border-color .15s;}
+input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(224,98,83,.1);}
+.btn-primary{width:100%;background:var(--primary);color:#fff;border-radius:var(--r-full);padding:12px;font-size:15px;font-weight:700;transition:background .15s;margin-top:4px;}
+.btn-primary:hover{background:var(--primary-hover);}
+.hint-msg{font-size:12px;color:var(--err);text-align:center;margin-top:10px;min-height:16px;}
+
+/* LOADING */
+#loading{display:flex;align-items:center;justify-content:center;min-height:60vh;flex-direction:column;gap:14px;}
+.spinner{width:32px;height:32px;border:3px solid var(--hairline);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* APP */
+#app{display:none;padding:28px 0 80px;}
+.page-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;}
+.page-title{font-size:22px;font-weight:800;letter-spacing:-.02em;}
+.page-sub{font-size:13px;color:var(--muted);margin-top:2px;}
+.stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;}
+.stat-card{background:var(--canvas);border:1px solid var(--hairline);border-radius:var(--r-md);padding:14px 20px;flex:1;min-width:120px;}
+.stat-val{font-size:26px;font-weight:800;letter-spacing:-.02em;}
+.stat-lbl{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+.search-box{flex:1;min-width:200px;position:relative;}
+.search-box input{width:100%;padding:9px 12px 9px 36px;border:1.5px solid var(--hairline);border-radius:var(--r-full);font-size:14px;font-family:inherit;outline:none;background:var(--canvas);transition:border-color .15s;}
+.search-box input:focus{border-color:var(--primary);}
+.search-box svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);}
+.filter-select{padding:9px 32px 9px 12px;border:1.5px solid var(--hairline);border-radius:var(--r-full);font-size:13px;font-family:inherit;outline:none;background:var(--canvas);appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23062533' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer;}
+
+/* TABLE */
+.table-wrap{background:var(--canvas);border:1px solid var(--hairline);border-radius:var(--r-lg);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead{background:var(--surface);}
+th{padding:11px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:left;border-bottom:1px solid var(--hairline);}
+td{padding:14px 16px;font-size:14px;border-bottom:1px solid var(--hairline);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(6,37,51,.02);}
+.prof-cell{display:flex;align-items:center;gap:12px;}
+.prof-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--surface);border:1px solid var(--hairline);}
+.prof-avatar-placeholder{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#fbf3ec,#feddd6);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--primary);flex-shrink:0;}
+.prof-name{font-weight:600;font-size:14px;}
+.prof-esp{font-size:12px;color:var(--muted);}
+.status-pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);}
+.status-pub{background:#dcfce7;color:var(--ok);}
+.status-unpub{background:#fef3c7;color:var(--warn);}
+.crm-tag{font-size:12px;color:var(--muted);}
+.actions-cell{display:flex;gap:8px;align-items:center;}
+.btn-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--surface);color:var(--muted);transition:all .15s;}
+.btn-icon:hover{background:var(--hairline);color:var(--ink);}
+.btn-icon.danger:hover{background:#fee2e2;color:var(--err);}
+.btn-icon.warn:hover{background:#fef3c7;color:var(--warn);}
+.btn-icon.ok:hover{background:#dcfce7;color:var(--ok);}
+.empty-row td{text-align:center;padding:48px;color:var(--muted);}
+
+/* MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(6,37,51,.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-backdrop.hidden{display:none;}
+.modal{background:var(--canvas);border-radius:var(--r-lg);max-width:640px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(6,37,51,.2);}
+.modal-head{padding:20px 24px 16px;border-bottom:1px solid var(--hairline);display:flex;align-items:center;justify-content:space-between;}
+.modal-head h3{font-size:17px;font-weight:800;}
+.modal-close{background:var(--surface);border:none;width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);}
+.modal-close:hover{background:var(--hairline);}
+.modal-body{padding:20px 24px;}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field-grid .span2{grid-column:span 2;}
+@media(max-width:500px){.field-grid{grid-template-columns:1fr;}.field-grid .span2{grid-column:span 1;}}
+.modal-body .field{margin-bottom:0;}
+.modal-body input,.modal-body select,.modal-body textarea{width:100%;padding:9px 11px;border:1.5px solid var(--hairline);border-radius:10px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;}
+.modal-body input:focus,.modal-body select:focus,.modal-body textarea:focus{border-color:var(--primary);}
+.modal-body select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23062533' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;background-color:#fff;padding-right:30px;}
+.modal-body textarea{resize:vertical;min-height:80px;line-height:1.5;}
+.modal-foot{padding:16px 24px;border-top:1px solid var(--hairline);display:flex;gap:10px;justify-content:flex-end;}
+.btn-cancel{background:var(--surface);color:var(--ink);border-radius:var(--r-full);padding:10px 20px;font-size:14px;font-weight:600;}
+.btn-cancel:hover{background:var(--hairline);}
+.btn-save{background:var(--primary);color:#fff;border-radius:var(--r-full);padding:10px 24px;font-size:14px;font-weight:600;transition:background .15s;}
+.btn-save:hover{background:var(--primary-hover);}
+.btn-save:disabled{opacity:.55;cursor:not-allowed;}
+.modal-section{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:18px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--hairline);}
+
+/* CONFIRM MODAL */
+.confirm-modal{max-width:400px;}
+.confirm-body{padding:24px;text-align:center;}
+.confirm-icon{font-size:36px;margin-bottom:12px;}
+.confirm-body h3{font-size:17px;font-weight:800;margin-bottom:6px;}
+.confirm-body p{font-size:14px;color:var(--muted);margin-bottom:20px;}
+.confirm-actions{display:flex;gap:10px;justify-content:center;}
+.btn-danger{background:var(--err);color:#fff;border-radius:var(--r-full);padding:10px 24px;font-size:14px;font-weight:600;transition:background .15s;}
+.btn-danger:hover{background:#b91c1c;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--ink);color:#fff;padding:12px 22px;border-radius:12px;font-size:14px;font-weight:600;transition:transform .3s;z-index:999;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.ok{background:var(--ok);}
+.toast.err{background:var(--err);}
+
+@media(max-width:700px){
+  .stats-row{gap:8px;}
+  .stat-card{min-width:100px;}
+  th:nth-child(3),td:nth-child(3),th:nth-child(4),td:nth-child(4){display:none;}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="container">
+    <img src="images/brand/sense-logo.png" alt="Sense" class="nav-logo"/>
+    <div class="nav-right" id="navRight" style="display:none">
+      <span class="admin-badge">Admin</span>
+      <span id="navEmail" style="font-size:13px;color:var(--muted)"></span>
+      <button class="btn-sm btn-logout" id="btnLogout">Sair</button>
+    </div>
+  </div>
+</header>
+
+<div id="loading"><div class="spinner"></div><p style="color:var(--muted);font-size:14px">Carregando…</p></div>
+
+<div id="auth-screen">
+  <div class="auth-card">
+    <h2>Acesso restrito</h2>
+    <p>Área exclusiva para administradores da Sense.</p>
+    <div class="field"><label>E-mail</label><input type="email" id="aEmail" placeholder="admin@email.com" autocomplete="email"/></div>
+    <div class="field"><label>Senha</label><input type="password" id="aPass" placeholder="Senha" autocomplete="current-password"/></div>
+    <button class="btn-primary" id="btnLogin">Entrar</button>
+    <p class="hint-msg" id="loginHint"></p>
+  </div>
+</div>
+
+<div id="app">
+  <div class="container">
+    <div class="page-header">
+      <div><h1 class="page-title">Perfis Profissionais</h1><p class="page-sub">Gerencie os perfis publicados em clinicasense.com.br</p></div>
+      <a href="especialistas.html" target="_blank" style="font-size:13px;color:var(--primary);font-weight:600;">Ver site →</a>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val" id="statTotal">—</div><div class="stat-lbl">Total</div></div>
+      <div class="stat-card"><div class="stat-val" id="statPub" style="color:var(--ok)">—</div><div class="stat-lbl">Publicados</div></div>
+      <div class="stat-card"><div class="stat-val" id="statOcul" style="color:var(--warn)">—</div><div class="stat-lbl">Ocultos</div></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar por nome ou especialidade…"/>
+      </div>
+      <select class="filter-select" id="filterStatus">
+        <option value="all">Todos os status</option>
+        <option value="pub">Publicados</option>
+        <option value="ocul">Ocultos</option>
+      </select>
+      <select class="filter-select" id="filterCat">
+        <option value="all">Todas as categorias</option>
+        <option>Médico</option><option>Dentista</option><option>Fisioterapeuta</option>
+        <option>Nutricionista</option><option>Psicólogo</option><option>Enfermeiro</option>
+        <option>Bioquímico</option><option>Outro</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table id="profTable">
+        <thead>
+          <tr>
+            <th>Profissional</th>
+            <th>Registro</th>
+            <th>Contato</th>
+            <th>Cadastro</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"><tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-backdrop hidden" id="editModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Editar perfil</h3>
+      <button class="modal-close" onclick="closeEdit()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId"/>
+      <div class="modal-section">Dados pessoais</div>
+      <div class="field-grid">
+        <div class="field"><label>Tratamento</label><select id="eTrat"><option value="">—</option><option>Dr.</option><option>Dra.</option></select></div>
+        <div class="field span2"><label>Nome completo *</label><input type="text" id="eNome"/></div>
+        <div class="field"><label>Categoria</label><select id="eCat"><option>Médico</option><option>Dentista</option><option>Fisioterapeuta</option><option>Nutricionista</option><option>Psicólogo</option><option>Enfermeiro</option><option>Bioquímico</option><option>Outro</option></select></div>
+        <div class="field"><label>Especialidade</label><input type="text" id="eEsp"/></div>
+        <div class="field"><label>Sigla (CRM/CRO…)</label><input type="text" id="eSigla"/></div>
+        <div class="field"><label>Nº registro</label><input type="text" id="eReg"/></div>
+        <div class="field"><label>UF</label><select id="eUF"><option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select></div>
+        <div class="field"><label>RQE</label><input type="text" id="eRqe"/></div>
+      </div>
+
+      <div class="modal-section">Conteúdo</div>
+      <div class="field-grid">
+        <div class="field span2"><label>Tratamentos (separados por vírgula)</label><input type="text" id="eTrats" placeholder="Enxaqueca, Epilepsia, Parkinson"/></div>
+        <div class="field span2"><label>Formação e especialização</label><textarea id="eForm"></textarea></div>
+        <div class="field span2"><label>Sobre</label><textarea id="eSobre"></textarea></div>
+        <div class="field span2"><label>Quando se consultar</label><textarea id="eQuando"></textarea></div>
+      </div>
+
+      <div class="modal-section">Contato</div>
+      <div class="field-grid">
+        <div class="field"><label>WhatsApp</label><input type="text" id="eWa"/></div>
+        <div class="field"><label>Instagram</label><input type="text" id="eIg"/></div>
+        <div class="field"><label>Site</label><input type="text" id="eSite"/></div>
+        <div class="field"><label>E-mail</label><input type="text" id="eEmail"/></div>
+      </div>
+
+      <div class="modal-section">Publicação</div>
+      <div class="field-grid">
+        <div class="field"><label>Status</label>
+          <select id="ePub"><option value="true">Publicado</option><option value="false">Oculto</option></select>
+        </div>
+        <div class="field"><label>Slug (URL)</label><input type="text" id="eSlug"/></div>
+        <div class="field"><label>URL da foto</label><input type="text" id="eFoto"/></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeEdit()">Cancelar</button>
+      <button class="btn-save" id="btnSaveEdit" onclick="saveEdit()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="modal-backdrop hidden" id="confirmModal">
+  <div class="modal confirm-modal">
+    <div class="confirm-body">
+      <div class="confirm-icon">🗑️</div>
+      <h3>Apagar perfil?</h3>
+      <p id="confirmMsg">Esta ação não pode ser desfeita.</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel" onclick="closeConfirm()">Cancelar</button>
+        <button class="btn-danger" id="btnConfirmDel">Apagar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://lipienluttpbtcbffdhv.supabase.co';
+const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpcGllbmx1dHRwYnRjYmZmZGh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTE2MDgsImV4cCI6MjA5NTcyNzYwOH0.v1m4ULoPDi54M7gPEEdyMCgp6zV2fyp0GUrMujLexn0';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+const $=id=>document.getElementById(id);
+let allProfs=[], editingId=null, deletingId=null;
+
+function toast(msg,type){const t=$('toast');t.textContent=msg;t.className='toast show'+(type?' '+type:'');setTimeout(()=>t.className='toast',type==='err'?4000:2800);}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+
+/* ---- AUTH ---- */
+$('btnLogin').onclick=async()=>{
+  const email=$('aEmail').value.trim(),pass=$('aPass').value;
+  if(!email||!pass){$('loginHint').textContent='Preencha e-mail e senha.';return;}
+  $('btnLogin').disabled=true;$('btnLogin').textContent='Entrando…';
+  const {error}=await sb.auth.signInWithPassword({email,password:pass});
+  if(error){$('loginHint').textContent='E-mail ou senha incorretos.';$('btnLogin').disabled=false;$('btnLogin').textContent='Entrar';return;}
+  location.reload();
+};
+$('btnLogout').onclick=async()=>{await sb.auth.signOut();location.reload();};
+
+/* ---- TABLE ---- */
+function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function filtered(){
+  const q=norm($('searchInput').value.trim());
+  const fs=$('filterStatus').value, fc=$('filterCat').value;
+  return allProfs.filter(p=>{
+    const nq=!q||norm(p.nome_completo).includes(q)||norm(p.especialidade).includes(q);
+    const fs2=fs==='all'||(fs==='pub'&&p.publicado)||(fs==='ocul'&&!p.publicado);
+    const fc2=fc==='all'||p.categoria===fc;
+    return nq&&fs2&&fc2;
+  });
+}
+
+function renderTable(){
+  const list=filtered();
+  const body=$('tableBody');
+  if(!list.length){body.innerHTML='<tr><td colspan="6" style="text-align:center;padding:48px;color:var(--muted)">Nenhum perfil encontrado.</td></tr>';return;}
+  body.innerHTML=list.map(p=>{
+    const nome=(p.tratamento||'')+' '+p.nome_completo;
+    const crm=[(p.associacao_sigla||''),(p.numero_registro||''),(p.uf?'/'+p.uf:'')].join(' ').trim();
+    const foto=p.foto_url?`<img class="prof-avatar" src="${esc(p.foto_url)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div class="prof-avatar-placeholder" style="display:none">${esc((p.nome_completo||'?')[0])}</div>`:`<div class="prof-avatar-placeholder">${esc((p.nome_completo||'?')[0])}</div>`;
+    const status=p.publicado?'<span class="status-pill status-pub">● Publicado</span>':'<span class="status-pill status-unpub">● Oculto</span>';
+    const toggleTip=p.publicado?'Ocultar':'Publicar';
+    const toggleIcon=p.publicado
+      ?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/></svg>`
+      :`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    const dt=p.created_at?new Date(p.created_at).toLocaleDateString('pt-BR'):'—';
+    return `<tr>
+      <td><div class="prof-cell">${foto}<div><div class="prof-name">${esc(nome.trim())}</div><div class="prof-esp">${esc(p.especialidade||p.categoria||'')}</div></div></div></td>
+      <td><span class="crm-tag">${esc(crm)||'—'}</span></td>
+      <td><span style="font-size:12px;color:var(--muted)">${esc(p.whatsapp||p.email_contato||'—')}</span></td>
+      <td><span style="font-size:12px;color:var(--muted)">${dt}</span></td>
+      <td>${status}</td>
+      <td><div class="actions-cell">
+        <button class="btn-icon" title="Editar" onclick="openEdit('${p.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="btn-icon ${p.publicado?'warn':'ok'}" title="${toggleTip}" onclick="togglePub('${p.id}',${p.publicado})">${toggleIcon}</button>
+        <button class="btn-icon danger" title="Apagar" onclick="confirmDelete('${p.id}','${esc(nome.trim())}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
+        <a class="btn-icon" title="Ver perfil" href="perfil.html?id=${encodeURIComponent(p.slug||p.id)}" target="_blank"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+      </div></td></tr>`;
+  }).join('');
+}
+
+function updateStats(){
+  $('statTotal').textContent=allProfs.length;
+  $('statPub').textContent=allProfs.filter(p=>p.publicado).length;
+  $('statOcul').textContent=allProfs.filter(p=>!p.publicado).length;
+}
+
+/* ---- LOAD ---- */
+async function loadProfs(){
+  const {data,error}=await sb.from('profissionais').select('*').order('nome_completo');
+  if(error){toast('Erro ao carregar perfis','err');return;}
+  allProfs=data||[];updateStats();renderTable();
+}
+
+/* ---- TOGGLE PUB ---- */
+async function togglePub(id,pub){
+  const {error}=await sb.from('profissionais').update({publicado:!pub}).eq('id',id);
+  if(error){toast('Erro ao atualizar','err');return;}
+  const p=allProfs.find(p=>p.id===id);if(p)p.publicado=!pub;
+  updateStats();renderTable();
+  toast(pub?'Perfil ocultado':'Perfil publicado', pub?'':'ok');
+}
+
+/* ---- EDIT MODAL ---- */
+function openEdit(id){
+  const p=allProfs.find(p=>p.id===id);if(!p)return;
+  editingId=id;
+  $('modalTitle').textContent='Editando — '+(p.tratamento||'')+' '+p.nome_completo;
+  $('editId').value=id;
+  $('eTrat').value=p.tratamento||'';
+  $('eNome').value=p.nome_completo||'';
+  $('eCat').value=p.categoria||'Médico';
+  $('eEsp').value=p.especialidade||'';
+  $('eSigla').value=p.associacao_sigla||'';
+  $('eReg').value=p.numero_registro||'';
+  $('eUF').value=p.uf||'';
+  $('eRqe').value=p.rqe||'';
+  $('eTrats').value=Array.isArray(p.tratamentos)?p.tratamentos.join(', '):'';
+  $('eForm').value=p.formacao_especializacao||'';
+  $('eSobre').value=p.sobre||'';
+  $('eQuando').value=p.quando_consultar||'';
+  $('eWa').value=p.whatsapp||'';
+  $('eIg').value=p.instagram||'';
+  $('eSite').value=p.site||'';
+  $('eEmail').value=p.email_contato||'';
+  $('ePub').value=String(p.publicado);
+  $('eSlug').value=p.slug||'';
+  $('eFoto').value=p.foto_url||'';
+  $('editModal').classList.remove('hidden');
+}
+function closeEdit(){$('editModal').classList.add('hidden');editingId=null;}
+$('editModal').addEventListener('click',e=>{if(e.target===$('editModal'))closeEdit();});
+
+async function saveEdit(){
+  const nome=$('eNome').value.trim();if(!nome){toast('Nome obrigatório','err');return;}
+  $('btnSaveEdit').disabled=true;$('btnSaveEdit').textContent='Salvando…';
+  const tratsRaw=$('eTrats').value;
+  const tratamentos=tratsRaw?tratsRaw.split(',').map(t=>t.trim()).filter(Boolean):[];
+  const row={
+    tratamento:$('eTrat').value||null,nome_completo:nome,categoria:$('eCat').value,
+    associacao_sigla:$('eSigla').value.trim()||null,numero_registro:$('eReg').value.trim()||null,
+    uf:$('eUF').value||null,rqe:$('eRqe').value.trim()||null,especialidade:$('eEsp').value.trim()||null,
+    tratamentos,formacao_especializacao:$('eForm').value.trim()||null,
+    sobre:$('eSobre').value.trim()||null,quando_consultar:$('eQuando').value.trim()||null,
+    whatsapp:$('eWa').value.trim()||null,instagram:$('eIg').value.trim()||null,
+    site:$('eSite').value.trim()||null,email_contato:$('eEmail').value.trim()||null,
+    publicado:$('ePub').value==='true',slug:$('eSlug').value.trim()||null,
+    foto_url:$('eFoto').value.trim()||null
+  };
+  const {data,error}=await sb.from('profissionais').update(row).eq('id',editingId).select().single();
+  $('btnSaveEdit').disabled=false;$('btnSaveEdit').textContent='Salvar alterações';
+  if(error){toast('Erro: '+error.message,'err');return;}
+  const idx=allProfs.findIndex(p=>p.id===editingId);
+  if(idx>=0)allProfs[idx]={...allProfs[idx],...data};
+  updateStats();renderTable();closeEdit();toast('Perfil atualizado!','ok');
+}
+
+/* ---- DELETE ---- */
+function confirmDelete(id,nome){
+  deletingId=id;
+  $('confirmMsg').textContent=`Isso vai apagar permanentemente o perfil de ${nome}.`;
+  $('confirmModal').classList.remove('hidden');
+  $('btnConfirmDel').onclick=async()=>{
+    $('btnConfirmDel').disabled=true;
+    const {error}=await sb.from('profissionais').delete().eq('id',deletingId);
+    $('btnConfirmDel').disabled=false;
+    if(error){toast('Erro ao apagar','err');closeConfirm();return;}
+    allProfs=allProfs.filter(p=>p.id!==deletingId);
+    updateStats();renderTable();closeConfirm();toast('Perfil apagado');
+  };
+  $('confirmModal').classList.remove('hidden');
+}
+function closeConfirm(){$('confirmModal').classList.add('hidden');deletingId=null;}
+$('confirmModal').addEventListener('click',e=>{if(e.target===$('confirmModal'))closeConfirm();});
+
+/* ---- FILTERS ---- */
+$('searchInput').addEventListener('input',renderTable);
+$('filterStatus').addEventListener('change',renderTable);
+$('filterCat').addEventListener('change',renderTable);
+
+/* ---- BOOT ---- */
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  $('loading').style.display='none';
+  if(!session){$('auth-screen').style.display='flex';return;}
+  // Verifica no BANCO se é admin (RLS protege de verdade)
+  const {data:adminRow}=await sb.from('admins').select('user_id').eq('user_id',session.user.id).maybeSingle();
+  if(!adminRow){
+    await sb.auth.signOut();
+    $('auth-screen').style.display='flex';
+    $('loginHint').textContent='Acesso não autorizado para esta conta.';
+    return;
+  }
+  $('navRight').style.display='flex';
+  $('navEmail').textContent=session.user.email;
+  $('app').style.display='block';
+  await loadProfs();
+}
+boot();
+</script>
+</body>
+</html>

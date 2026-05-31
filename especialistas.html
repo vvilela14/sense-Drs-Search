@@ -37,7 +37,19 @@
     .nav-secondary{display:inline-flex;align-items:center;gap:7px;background:#fff;color:var(--ink);font-size:14px;font-weight:600;padding:8px 16px;border-radius:var(--r-full);border:1.5px solid var(--hairline);text-decoration:none;transition:border-color .15s;white-space:nowrap;}
     .nav-secondary:hover{border-color:var(--ink);}
     .nav-secondary svg{flex-shrink:0;}
-    @media(max-width:640px){.nav-secondary span{display:none;}.nav-secondary{padding:8px 11px;}}
+
+    .nav-ham{display:none;background:none;border:none;cursor:pointer;padding:6px;color:var(--ink);}
+    .nav-mobile-menu{display:none;position:absolute;top:64px;left:0;right:0;background:var(--canvas);border-bottom:1px solid var(--hairline);padding:12px 20px;z-index:50;flex-direction:column;gap:0;}
+    .nav-mobile-menu.open{display:flex;}
+    .nav-mobile-menu a{font-size:15px;font-weight:600;color:var(--ink);padding:12px 0;border-bottom:1px solid var(--hairline-soft);display:block;}
+    .nav-mobile-menu a:last-child{border-bottom:none;}
+    @media(max-width:640px){
+      .nav-links{display:none!important;}
+      .nav-secondary span{display:none;}
+      .nav-secondary{padding:8px 11px;}
+      .nav-ham{display:flex;}
+      .nav{position:relative;}
+    }
     @media(max-width:640px){.nav-links{display:none;}}
     /* PAGE HERO */
     /* HERO */
@@ -155,6 +167,15 @@
         <a href="index.html#especialidades" class="nav-link">Especialidades</a>
         <a href="especialistas.html" class="nav-link">Profissionais</a>
       </nav>
+      <button class="nav-ham" id="navHam" aria-label="Menu" onclick="toggleMobileMenu()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="nav-mobile-menu" id="mobileMenu">
+        <a href="index.html#especialidades">Especialidades</a>
+        <a href="especialistas.html">Profissionais</a>
+        <a href="area-profissional.html">Área do Profissional</a>
+        <a href="https://api.whatsapp.com/send/?phone=5534999593207" target="_blank" rel="noopener">Agendar Consulta</a>
+      </div>
       <a href="area-profissional.html" class="nav-secondary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Área do Profissional</span></a>
       <a href="https://api.whatsapp.com/send/?phone=5534999593207&text&type=phone_number&app_absent=0" target="_blank" rel="noopener" class="nav-cta">Agendar Consulta</a>
     </div>
@@ -212,7 +233,10 @@
   </div>
 </section>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+function toggleMobileMenu(){document.getElementById('mobileMenu').classList.toggle('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('#navHam')&&!e.target.closest('#mobileMenu'))document.getElementById('mobileMenu').classList.remove('open');});
+</script>
 <script>
 const SUPABASE_URL='https://lipienluttpbtcbffdhv.supabase.co';
 const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpcGllbmx1dHRwYnRjYmZmZGh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTE2MDgsImV4cCI6MjA5NTcyNzYwOH0.v1m4ULoPDi54M7gPEEdyMCgp6zV2fyp0GUrMujLexn0';

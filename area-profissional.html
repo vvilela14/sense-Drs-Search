@@ -30,6 +30,16 @@ button{font:inherit;cursor:pointer;border:none;}
 .nav-user{display:flex;align-items:center;gap:14px;color:var(--muted);font-size:13px;}
 .nav-logout{background:var(--surface-soft);color:var(--ink);font-size:13px;font-weight:600;padding:7px 14px;border-radius:var(--r-full);transition:background .15s;}
 .nav-logout:hover{background:var(--hairline);}
+.nav-ham{display:none;background:none;border:none;cursor:pointer;padding:6px;color:var(--ink);}
+.nav-mobile-menu{display:none;position:absolute;top:60px;left:0;right:0;background:#fff;border-bottom:1px solid var(--hairline);padding:12px 20px;z-index:50;flex-direction:column;gap:10px;}
+.nav-mobile-menu.open{display:flex;}
+.nav-mobile-menu a,.nav-mobile-menu button{font-size:15px;font-weight:600;color:var(--ink);background:none;border:none;text-align:left;padding:8px 0;cursor:pointer;border-bottom:1px solid var(--hairline-soft);}
+.nav-mobile-menu a:last-child,.nav-mobile-menu button:last-child{border-bottom:none;}
+@media(max-width:640px){
+  .nav-user{display:none!important;}
+  .nav-ham{display:flex;}
+  header.nav{position:relative;}
+}
 
 /* LOADING */
 #loading{display:flex;align-items:center;justify-content:center;min-height:70vh;flex-direction:column;gap:16px;}
@@ -127,6 +137,14 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
     <div class="nav-user" id="navUser" style="display:none">
       <span id="navEmail"></span>
       <a class="nav-logout" id="btnLogout">Sair</a>
+    </div>
+    <button class="nav-ham" id="navHam" aria-label="Menu" onclick="toggleMobileMenu()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="nav-mobile-menu" id="mobileMenu">
+      <a href="especialistas.html">Ver especialistas</a>
+      <a href="index.html">Início</a>
+      <button id="mobileLogout" style="display:none" onclick="document.getElementById('btnLogout').click()">Sair</button>
     </div>
   </div>
 </header>
@@ -452,7 +470,14 @@ $('btnSave').onclick=async()=>{
 
   $('btnSave').disabled=true;$('saveLabel').textContent='Salvando…';
   try{
-    let fotoUrl=$('fotoPreview').style.display==='block'?$('fotoPreview').src:null;
+    // Mantém a foto_url atual se não há arquivo novo
+    const profAtual = existingId ? allProfs : null;
+    let fotoUrl = null;
+    // Se já existe perfil, preserva a URL atual
+    if(existingId){
+      const {data:cur}=await sb.from('profissionais').select('foto_url').eq('id',existingId).single().catch(()=>({data:null}));
+      fotoUrl = cur ? cur.foto_url : null;
+    }
     if(fotoFile){
       const ext=fotoFile.name.split('.').pop().toLowerCase();
       const path=currentUser.id+'/foto.'+ext;
@@ -498,13 +523,21 @@ $('btnPreview').onclick=()=>{
 };
 
 /* ---------- BOOT ---------- */
+function toggleMobileMenu(){
+  const m=document.getElementById('mobileMenu');
+  m.classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  const m=document.getElementById('mobileMenu');
+  if(!e.target.closest('#navHam')&&!e.target.closest('#mobileMenu'))m.classList.remove('open');
+});
 async function boot(){
   const {data:{session}}=await sb.auth.getSession();
   $('loading').style.display='none';
   if(!session){$('auth-screen').style.display='flex';return;}
   $('auth-screen').style.display='none';
   currentUser=session.user;
-  $('navUser').style.display='flex';$('navEmail').textContent=currentUser.email;
+  $('navUser').style.display='flex';$('navEmail').textContent=currentUser.email;$('mobileLogout').style.display='block';
   $('app').style.display='block';
   const {data,error}=await sb.from('profissionais').select('*').eq('user_id',currentUser.id).maybeSingle();
   if(error){toast('Erro ao carregar perfil','err');}
