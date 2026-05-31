@@ -470,13 +470,11 @@ $('btnSave').onclick=async()=>{
 
   $('btnSave').disabled=true;$('saveLabel').textContent='Salvando…';
   try{
-    // Mantém a foto_url atual se não há arquivo novo
-    const profAtual = existingId ? allProfs : null;
+    // Preserva a foto_url atual se não há arquivo novo
     let fotoUrl = null;
-    // Se já existe perfil, preserva a URL atual
     if(existingId){
-      const {data:cur}=await sb.from('profissionais').select('foto_url').eq('id',existingId).single().catch(()=>({data:null}));
-      fotoUrl = cur ? cur.foto_url : null;
+      const {data:cur}=await sb.from('profissionais').select('foto_url').eq('id',existingId).maybeSingle();
+      fotoUrl = (cur && cur.foto_url) ? cur.foto_url : null;
     }
     if(fotoFile){
       const ext=fotoFile.name.split('.').pop().toLowerCase();
