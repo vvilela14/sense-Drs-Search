@@ -128,12 +128,6 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
 .btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--primary);border-radius:var(--r-full);padding:12px 22px;font-size:14px;font-weight:600;transition:background .15s;}
 .btn-outline:hover{background:rgba(224,98,83,.06);}
 
-/* PASSWORD TOGGLE */
-.pass-wrap{position:relative;}
-.pass-wrap input{padding-right:42px;}
-.pass-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;display:flex;align-items:center;}
-.pass-eye:hover{color:var(--ink);}
-
 /* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--ink);color:#fff;padding:13px 22px;border-radius:12px;font-size:14px;font-weight:600;transition:transform .3s;z-index:999;max-width:90vw;text-align:center;}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -184,17 +178,11 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
     </div>
     <div class="field" style="margin-bottom:14px">
       <label>Senha</label>
-      <div class="pass-wrap">
-        <input type="password" id="authPass" placeholder="Mínimo 6 caracteres" autocomplete="current-password"/>
-        <button type="button" class="pass-eye" onclick="togglePass('authPass',this)" tabindex="-1">👁</button>
-      </div>
+      <input type="password" id="authPass" placeholder="Mínimo 6 caracteres" autocomplete="current-password"/>
     </div>
     <div class="field" id="confirmField" style="margin-bottom:8px;display:none">
       <label>Confirmar senha</label>
-      <div class="pass-wrap">
-        <input type="password" id="authPassConfirm" placeholder="Digite a senha novamente" autocomplete="new-password"/>
-        <button type="button" class="pass-eye" onclick="togglePass('authPassConfirm',this)" tabindex="-1">👁</button>
-      </div>
+      <input type="password" id="authPassConfirm" placeholder="Digite a senha novamente" autocomplete="new-password"/>
     </div>
     <p class="hint" id="passReq" style="display:none;margin-bottom:18px;line-height:1.5">A senha precisa ter ao menos: <b>6 caracteres</b>, <b>uma letra minúscula</b> e <b>um caractere especial</b> (ex: ! @ # $ %).</p>
     <button class="btn-primary" id="btnAuth" style="width:100%">Entrar</button>
@@ -211,17 +199,11 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
     <p class="sub">Defina uma nova senha para sua conta.</p>
     <div class="field" style="margin-bottom:14px">
       <label>Nova senha</label>
-      <div class="pass-wrap">
-        <input type="password" id="newPass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
-        <button type="button" class="pass-eye" onclick="togglePass('newPass',this)" tabindex="-1">👁</button>
-      </div>
+      <input type="password" id="newPass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
     </div>
     <div class="field" style="margin-bottom:8px">
       <label>Confirmar nova senha</label>
-      <div class="pass-wrap">
-        <input type="password" id="newPassConfirm" placeholder="Digite novamente" autocomplete="new-password"/>
-        <button type="button" class="pass-eye" onclick="togglePass('newPassConfirm',this)" tabindex="-1">👁</button>
-      </div>
+      <input type="password" id="newPassConfirm" placeholder="Digite novamente" autocomplete="new-password"/>
     </div>
     <p class="hint" style="margin-bottom:18px;line-height:1.5">A senha precisa ter ao menos: <b>6 caracteres</b>, <b>uma letra minúscula</b> e <b>um caractere especial</b> (ex: ! @ # $ %).</p>
     <button class="btn-primary" id="btnNewPass" style="width:100%">Salvar nova senha</button>
@@ -454,7 +436,14 @@ $('btnAuth').onclick=async()=>{
     $('auth-screen').style.display='none';
     await boot();
   }catch(e){
-    $('authHint').textContent = traduzErro(e.message);
+    const errMsg = e.message||'';
+    if(/already registered/i.test(errMsg)){
+      $('authHint').innerHTML='E-mail já cadastrado. <a href="#" id="hintForgot" style="color:var(--primary);font-weight:700;text-decoration:underline;">Esqueci minha senha</a>';
+      document.getElementById('hintForgot').onclick=(ev)=>{ev.preventDefault();$('linkForgot').click();};
+      setAuthMode('login');
+    } else {
+      $('authHint').textContent = traduzErro(errMsg);
+    }
     $('btnAuth').disabled=false;$('btnAuth').textContent=authMode==='login'?'Entrar':'Criar conta';
   }
 };
@@ -638,13 +627,6 @@ $('btnPreview').onclick=()=>{
 const REDIRECT_URL = window.location.origin + window.location.pathname;
 let isRecovery = false;
 
-function togglePass(id, btn){
-  const inp=$(id);
-  const show=inp.type==='password';
-  inp.type=show?'text':'password';
-  btn.textContent=show?'🙈':'👁';
-}
-
 $('linkForgot').onclick=async(e)=>{
   e.preventDefault();
   const email=$('authEmail').value.trim();
@@ -652,8 +634,8 @@ $('linkForgot').onclick=async(e)=>{
   $('linkForgot').textContent='Enviando…';
   const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:REDIRECT_URL});
   $('linkForgot').textContent='Esqueci minha senha';
-  if(error){$('authHint').innerHTML='<span style="color:var(--err)">Erro ao enviar: '+error.message+'</span>';return;}
-  $('authHint').innerHTML='<span style="color:var(--ok)">✓ Link enviado para '+email+'. Verifique sua caixa de entrada (e o spam).</span>';
+  if(error){$('authHint').textContent='Erro: '+error.message;return;}
+  $('authHint').innerHTML='<span style="color:var(--ok)">Enviamos um link de recuperação para '+email+'. Verifique seu e-mail.</span>';
 };
 
 // Detecta retorno pelo link de recuperação
@@ -678,11 +660,11 @@ $('btnNewPass').onclick=async()=>{
   $('btnNewPass').disabled=false;$('btnNewPass').textContent='Salvar nova senha';
   if(error){$('resetHint').textContent='Erro: '+error.message;return;}
   $('resetHint').innerHTML='<span style="color:var(--ok)">Senha atualizada! Redirecionando…</span>';
+  isRecovery=false;
   // Limpa o flag force_password_reset no banco
   if(currentUser){
     await sb.from('profissionais').update({force_password_reset:false}).eq('user_id',currentUser.id);
   }
-  isRecovery=false;
   setTimeout(()=>{$('reset-screen').style.display='none';boot();},1500);
 };
 
