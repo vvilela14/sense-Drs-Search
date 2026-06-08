@@ -81,6 +81,17 @@ tr:hover td{background:rgba(6,37,51,.02);}
 .status-pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-full);}
 .status-pub{background:#dcfce7;color:var(--ok);}
 .status-unpub{background:#fef3c7;color:var(--warn);}
+.status-pend{background:rgba(224,98,83,.12);color:var(--primary);}
+/* PENDING APPROVAL */
+.pending-banner{background:linear-gradient(135deg,#fff5f3,#ffe9e4);border:1px solid rgba(224,98,83,.25);border-radius:var(--r-lg);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.pending-banner svg{color:var(--primary);flex-shrink:0;}
+.pending-banner .pb-title{font-size:14px;font-weight:800;color:var(--primary);}
+.pending-banner .pb-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+tr.row-pending td{background:rgba(224,98,83,.05)!important;}
+tr.row-pending td:first-child{box-shadow:inset 3px 0 0 var(--primary);}
+.btn-approve{display:inline-flex;align-items:center;gap:6px;background:var(--ok);color:#fff;font-size:12px;font-weight:700;padding:7px 14px;border-radius:var(--r-full);white-space:nowrap;transition:background .15s;}
+.btn-approve:hover{background:#15803d;}
+.new-tag{display:inline-block;background:var(--primary);color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:var(--r-full);margin-left:8px;vertical-align:middle;text-transform:uppercase;}
 .crm-tag{font-size:12px;color:var(--muted);}
 .actions-cell{display:flex;gap:8px;align-items:center;}
 .btn-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--surface);color:var(--muted);transition:all .15s;}
@@ -179,6 +190,7 @@ tr:hover td{background:rgba(6,37,51,.02);}
 
     <div class="stats-row">
       <div class="stat-card"><div class="stat-val" id="statTotal">—</div><div class="stat-lbl">Total</div></div>
+      <div class="stat-card"><div class="stat-val" id="statPend" style="color:var(--primary)">—</div><div class="stat-lbl">Aguardando aprovação</div></div>
       <div class="stat-card"><div class="stat-val" id="statPub" style="color:var(--ok)">—</div><div class="stat-lbl">Publicados</div></div>
       <div class="stat-card"><div class="stat-val" id="statOcul" style="color:var(--warn)">—</div><div class="stat-lbl">Ocultos</div></div>
     </div>
@@ -190,6 +202,7 @@ tr:hover td{background:rgba(6,37,51,.02);}
       </div>
       <select class="filter-select" id="filterStatus">
         <option value="all">Todos os status</option>
+        <option value="pend">Aguardando aprovação</option>
         <option value="pub">Publicados</option>
         <option value="ocul">Ocultos</option>
       </select>
@@ -204,6 +217,8 @@ tr:hover td{background:rgba(6,37,51,.02);}
         <option>Acupunturista</option><option>Alergista e Imunologista</option><option>Anestesiologista</option><option>Angiologista</option><option>Cardiologista</option><option>Cirurgião do Aparelho Digestivo</option><option>Cirurgião Geral</option><option>Cirurgião Oncológico</option><option>Cirurgião Pediátrico</option><option>Cirurgião Plástico</option><option>Cirurgião Torácico</option><option>Cirurgião Vascular</option><option>Clínico Médico (ou Clínico Geral)</option><option>Coloproctologista</option><option>Dermatologista</option><option>Endocrinologista</option><option>Endoscopista</option><option>Estética Avançada</option><option>Gastroenterologista</option><option>Geneticista Médico</option><option>Geriatra</option><option>Ginecologista e Obstetra</option><option>Hematologista Hemoterapeuta</option><option>Homeopata</option><option>Infectologista</option><option>Mastologista</option><option>Médico Emergencista</option><option>Médico de Família e Comunidade</option><option>Médico do Trabalho</option><option>Médico de Tráfego</option><option>Médico do Esporte</option><option>Médico Físico e Reabilitador</option><option>Médico Intensivista</option><option>Médico Legal e Perito Médico</option><option>Médico Nuclear</option><option>Médico Preventivista e Social</option><option>Nefrologista</option><option>Neurocirurgião</option><option>Neurologista</option><option>Nutrólogo</option><option>Oftalmologista</option><option>Oncologista Clínico</option><option>Ortopedista e Traumatologista</option><option>Otorrinolaringologista</option><option>Patologista</option><option>Patologista Clínico/Lab.</option><option>Pediatra</option><option>Pneumologista</option><option>Psiquiatra</option><option>Radiologista e Diagnóstico por Imagem</option><option>Radioterapeuta</option><option>Reumatologista</option><option>Urologista</option><option>Fisioterapeuta</option><option>Psicóloga</option><option>Psicólogo</option><option>Nutricionista</option><option>Dentista</option><option>Enfermeiro</option><option>Médico Clínico Geral</option>
       </select>
     </div>
+
+    <div id="pendingBanner"></div>
 
     <div class="table-wrap">
       <table id="profTable">
@@ -322,7 +337,7 @@ function filtered(){
   const fs=$('filterStatus').value, fc=$('filterCat').value, fe=$('filterEsp').value;
   return allProfs.filter(p=>{
     const nq=!q||norm(p.nome_completo).includes(q)||norm(p.especialidade).includes(q);
-    const fs2=fs==='all'||(fs==='pub'&&p.publicado)||(fs==='ocul'&&!p.publicado);
+    const fs2=fs==='all'||(fs==='pend'&&!p.aprovado)||(fs==='pub'&&p.publicado)||(fs==='ocul'&&p.aprovado&&!p.publicado);
     const fc2=fc==='all'||p.categoria===fc;
     const fe2=fe==='all'||norm(p.especialidade).includes(norm(fe));
     return nq&&fs2&&fc2&&fe2;
@@ -337,36 +352,53 @@ function renderTable(){
     const nome=(p.tratamento||'')+' '+p.nome_completo;
     const crm=[(p.associacao_sigla||''),(p.numero_registro||''),(p.uf?'/'+p.uf:'')].join(' ').trim();
     const foto=p.foto_url?`<img class="prof-avatar" src="${esc(p.foto_url)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div class="prof-avatar-placeholder" style="display:none">${esc((p.nome_completo||'?')[0])}</div>`:`<div class="prof-avatar-placeholder">${esc((p.nome_completo||'?')[0])}</div>`;
-    const status=p.publicado?'<span class="status-pill status-pub">● Publicado</span>':'<span class="status-pill status-unpub">● Oculto</span>';
+    const pend=!p.aprovado;
+    const status=pend?'<span class="status-pill status-pend">● Aguardando aprovação</span>'
+      :(p.publicado?'<span class="status-pill status-pub">● Publicado</span>':'<span class="status-pill status-unpub">● Oculto</span>');
     const toggleTip=p.publicado?'Ocultar':'Publicar';
     const toggleIcon=p.publicado
       ?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/></svg>`
       :`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
     const dt=p.created_at?new Date(p.created_at).toLocaleDateString('pt-BR'):'—';
-    return `<tr>
-      <td><div class="prof-cell">${foto}<div><div class="prof-name">${esc(nome.trim())}</div><div class="prof-esp">${esc(p.especialidade||p.categoria||'')}</div></div></div></td>
+    const nameCell=`<div class="prof-name">${esc(nome.trim())}${pend?'<span class="new-tag">Novo</span>':''}</div>`;
+    const approveBtn=pend?`<button class="btn-approve" title="Aprovar Perfil" onclick="aprovar('${p.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Aprovar Perfil</button>`:'';
+    return `<tr class="${pend?'row-pending':''}">
+      <td><div class="prof-cell">${foto}<div>${nameCell}<div class="prof-esp">${esc(p.especialidade||p.categoria||'')}</div></div></div></td>
       <td><span class="crm-tag">${esc(crm)||'—'}</span></td>
       <td><span style="font-size:12px;color:var(--muted)">${esc(p.whatsapp||p.email_contato||'—')}</span></td>
       <td><span style="font-size:12px;color:var(--muted)">${dt}</span></td>
       <td>${status}</td>
       <td><div class="actions-cell">
+        ${approveBtn}
         <button class="btn-icon" title="Editar" onclick="openEdit('${p.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="btn-icon ${p.publicado?'warn':'ok'}" title="${toggleTip}" onclick="togglePub('${p.id}',${p.publicado})">${toggleIcon}</button>
         <button class="btn-icon danger" title="Apagar" onclick="confirmDelete('${p.id}','${esc(nome.trim())}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
         <a class="btn-icon" title="Ver perfil" href="perfil.html?id=${encodeURIComponent(p.slug||p.id)}" target="_blank"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
       </div></td></tr>`;
   }).join('');
+  renderPendingBanner();
+}
+
+function renderPendingBanner(){
+  const pendCount=allProfs.filter(p=>!p.aprovado).length;
+  const el=$('pendingBanner');
+  if(!pendCount){el.innerHTML='';return;}
+  el.innerHTML=`<div class="pending-banner">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div><div class="pb-title">${pendCount} novo${pendCount>1?'s':''} perfil${pendCount>1?'s':''} aguardando aprovação</div><div class="pb-sub">Revise e clique em "Aprovar Perfil" para publicar.</div></div>
+  </div>`;
 }
 
 function updateStats(){
   $('statTotal').textContent=allProfs.length;
+  $('statPend').textContent=allProfs.filter(p=>!p.aprovado).length;
   $('statPub').textContent=allProfs.filter(p=>p.publicado).length;
-  $('statOcul').textContent=allProfs.filter(p=>!p.publicado).length;
+  $('statOcul').textContent=allProfs.filter(p=>p.aprovado&&!p.publicado).length;
 }
 
 /* ---- LOAD ---- */
 async function loadProfs(){
-  const {data,error}=await sb.from('profissionais').select('*').order('nome_completo');
+  const {data,error}=await sb.from('profissionais').select('*').order('aprovado',{ascending:true}).order('nome_completo');
   if(error){toast('Erro ao carregar perfis','err');return;}
   allProfs=data||[];updateStats();renderTable();
 }
@@ -378,6 +410,15 @@ async function togglePub(id,pub){
   const p=allProfs.find(p=>p.id===id);if(p)p.publicado=!pub;
   updateStats();renderTable();
   toast(pub?'Perfil ocultado':'Perfil publicado', pub?'':'ok');
+}
+
+/* ---- APROVAR PERFIL ---- */
+async function aprovar(id){
+  const {error}=await sb.from('profissionais').update({aprovado:true,publicado:true}).eq('id',id);
+  if(error){toast('Erro ao aprovar','err');return;}
+  const p=allProfs.find(p=>p.id===id);if(p){p.aprovado=true;p.publicado=true;}
+  updateStats();renderTable();
+  toast('Perfil aprovado e publicado!','ok');
 }
 
 /* ---- EDIT MODAL ---- */
