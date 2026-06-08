@@ -654,6 +654,10 @@ $('btnNewPass').onclick=async()=>{
   if(error){$('resetHint').textContent='Erro: '+error.message;return;}
   $('resetHint').innerHTML='<span style="color:var(--ok)">Senha atualizada! Redirecionando…</span>';
   isRecovery=false;
+  // Limpa o flag force_password_reset no banco
+  if(currentUser){
+    await sb.from('profissionais').update({force_password_reset:false}).eq('user_id',currentUser.id);
+  }
   setTimeout(()=>{$('reset-screen').style.display='none';boot();},1500);
 };
 
@@ -673,9 +677,17 @@ async function boot(){
   $('auth-screen').style.display='none';
   currentUser=session.user;
   $('navUser').style.display='flex';$('navEmail').textContent=currentUser.email;$('mobileLogout').style.display='block';
-  $('app').style.display='block';
   const {data,error}=await sb.from('profissionais').select('*').eq('user_id',currentUser.id).maybeSingle();
   if(error){toast('Erro ao carregar perfil','err');}
+  // Força troca de senha se admin resetou
+  if(data && data.force_password_reset){
+    $('app').style.display='none';
+    $('reset-screen').style.display='flex';
+    $('resetHint').innerHTML='<span style="color:var(--primary)">⚠️ Por segurança, crie uma nova senha para continuar.</span>';
+    isRecovery=true;
+    return;
+  }
+  $('app').style.display='block';
   if(data){fillForm(data);}else{$('email_contato').value=currentUser.email;renderConvenios();updateStatusBox(null);}
 }
 boot();
