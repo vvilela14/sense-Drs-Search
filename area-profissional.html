@@ -90,7 +90,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23062533' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;cursor:pointer;}
 textarea{resize:vertical;min-height:90px;line-height:1.55;}
 .hint{font-size:11px;color:var(--muted);line-height:1.4;}
-.assoc-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(224,98,83,.08);color:var(--primary);border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:6px;width:fit-content;}
+.assoc-badge{display:none;align-items:center;gap:5px;background:rgba(224,98,83,.08);color:var(--primary);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:700;letter-spacing:.04em;vertical-align:middle;margin-left:6px;}
 
 /* TAGS */
 .tags-box{min-height:46px;padding:6px 10px;border:1.5px solid var(--hairline);border-radius:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;cursor:text;background:#fff;transition:border-color .15s;}
@@ -268,10 +268,9 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
             <input type="text" id="especialidade" placeholder="Ex: Cardiologista, Ortopedista"/>
           </div>
         </div>
-        <div class="field-row">
+        <div class="field-row" style="align-items:flex-end">
           <div class="field w-sm">
-            <span class="assoc-badge" id="assocBadge" style="display:none"><span id="assocSigla">CRM</span></span>
-            <label id="assocLabel">Associação de Classe</label>
+            <label id="assocLabel">Associação de Classe <span class="assoc-badge" id="assocBadge" style="display:none"><span id="assocSigla">CRM</span></span></label>
             <input type="text" id="associacao_sigla" placeholder="Selecione a categoria" disabled/>
           </div>
           <div class="field w-sm">
@@ -367,9 +366,6 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
         <div class="field-row">
           <div class="field"><label>WhatsApp</label><input type="text" id="whatsapp" placeholder="(17) 99999-0000"/><span class="hint">Uso interno — não aparece na sua página pública.</span></div>
           <div class="field"><label>Instagram</label><input type="text" id="instagram" placeholder="@seuusuario"/></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label>Site / LinkedIn</label><input type="text" id="site" placeholder="https://…"/></div>
           <div class="field"><label>E-mail de contato</label><input type="text" id="email_contato" placeholder="contato@email.com"/></div>
         </div>
       </div>
@@ -456,7 +452,7 @@ $('btnLogout').onclick=async()=>{await sb.auth.signOut();location.reload();};
 $('categoria').onchange=function(){
   const sigla=ASSOC[this.value];
   const badge=$('assocBadge'),inp=$('associacao_sigla'),lbl=$('assocLabel');
-  if(sigla){badge.style.display='inline-flex';$('assocSigla').textContent=sigla;lbl.textContent=sigla;inp.value=sigla;inp.disabled=true;}
+  if(sigla){badge.style.display='inline-flex';$('assocSigla').textContent=sigla;lbl.textContent=sigla+' ';lbl.appendChild(badge);inp.value=sigla;inp.disabled=true;}
   else if(this.value==='Outro'){badge.style.display='none';lbl.textContent='Associação de Classe';inp.disabled=false;inp.value='';inp.placeholder='Ex: CFF, CRBM';}
   else{badge.style.display='none';lbl.textContent='Associação de Classe';inp.disabled=true;inp.value='';inp.placeholder='Selecione a categoria';}
 };
@@ -511,7 +507,6 @@ function fillForm(p){
   $('quando_consultar').value=p.quando_consultar||'';
   $('whatsapp').value=p.whatsapp||'';
   $('instagram').value=p.instagram||'';
-  $('site').value=p.site||'';
   $('email_contato').value=p.email_contato||'';
   tags=Array.isArray(p.tratamentos)?p.tratamentos.slice():[];renderTags();
   convenios=Array.isArray(p.convenios)?p.convenios.slice():[];renderConvenios();
@@ -596,7 +591,6 @@ $('btnSave').onclick=async()=>{
       quando_consultar:$('quando_consultar').value.trim()||null,
       whatsapp:$('whatsapp').value.trim()||null,
       instagram:$('instagram').value.trim()||null,
-      site:$('site').value.trim()||null,
       email_contato:$('email_contato').value.trim()||null,
       foto_url:fotoUrl,slug,
       // Aprovação: perfis já aprovados continuam publicados; novos ficam pendentes
