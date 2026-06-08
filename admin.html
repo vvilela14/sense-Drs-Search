@@ -91,6 +91,8 @@ tr.row-pending td{background:rgba(224,98,83,.05)!important;}
 tr.row-pending td:first-child{box-shadow:inset 3px 0 0 var(--primary);}
 .btn-approve{display:inline-flex;align-items:center;gap:6px;background:var(--ok);color:#fff;font-size:12px;font-weight:700;padding:7px 14px;border-radius:var(--r-full);white-space:nowrap;transition:background .15s;}
 .btn-approve:hover{background:#15803d;}
+.btn-reset-pw{display:inline-flex;align-items:center;gap:5px;background:#f7f7f7;color:var(--ink);font-size:12px;font-weight:700;padding:7px 12px;border-radius:var(--r-full);white-space:nowrap;border:1.5px solid var(--hairline);transition:all .15s;}
+.btn-reset-pw:hover{background:#fef3c7;border-color:#b45309;color:#b45309;}
 .new-tag{display:inline-block;background:var(--primary);color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 7px;border-radius:var(--r-full);margin-left:8px;vertical-align:middle;text-transform:uppercase;}
 .crm-tag{font-size:12px;color:var(--muted);}
 .actions-cell{display:flex;gap:8px;align-items:center;}
@@ -371,6 +373,7 @@ function renderTable(){
       <td><div class="actions-cell">
         ${approveBtn}
         <button class="btn-icon" title="Editar" onclick="openEdit('${p.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="btn-reset-pw" title="Resetar senha para Sense@2026" onclick="resetSenha('${p.id}','${esc(p.user_id||'')}','${esc(p.email_contato||'')}','${esc(nome.trim())}')">🔑 Reset senha</button>
         <button class="btn-icon ${p.publicado?'warn':'ok'}" title="${toggleTip}" onclick="togglePub('${p.id}',${p.publicado})">${toggleIcon}</button>
         <button class="btn-icon danger" title="Apagar" onclick="confirmDelete('${p.id}','${esc(nome.trim())}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
         <a class="btn-icon" title="Ver perfil" href="perfil.html?id=${encodeURIComponent(p.slug||p.id)}" target="_blank"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
@@ -419,6 +422,24 @@ async function aprovar(id){
   const p=allProfs.find(p=>p.id===id);if(p){p.aprovado=true;p.publicado=true;}
   updateStats();renderTable();
   toast('Perfil aprovado e publicado!','ok');
+}
+
+/* ---- RESET SENHA ---- */
+async function resetSenha(id, userId, emailContato, nome){
+  if(!userId){toast('Profissional sem user_id — não tem conta de acesso ainda','err');return;}
+  const email = emailContato || prompt('E-mail do profissional:');
+  if(!email){return;}
+  if(!confirm('Resetar a senha de '+nome+' para Sense@2026 e enviar e-mail?')){return;}
+  toast('Resetando senha…');
+  const {data:{session}}=await sb.auth.getSession();
+  const res=await fetch('https://lipienluttpbtcbffdhv.supabase.co/functions/v1/reset-password-admin',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+    body:JSON.stringify({user_id:userId,email,nome})
+  });
+  const json=await res.json();
+  if(!json.ok){toast('Erro: '+(json.error||'desconhecido'),'err');return;}
+  toast('Senha resetada e e-mail enviado para '+email,'ok');
 }
 
 /* ---- EDIT MODAL ---- */
