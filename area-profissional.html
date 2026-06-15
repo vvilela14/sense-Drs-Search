@@ -82,6 +82,11 @@ button{font:inherit;cursor:pointer;border:none;}
 @media(max-width:600px){.field-row{flex-direction:column;}.field.w-sm,.field.w-xs{flex:1;}}
 label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);opacity:.65;}
 label .req{color:var(--primary);margin-left:2px;}
+.pw-wrap{position:relative;}
+.pw-wrap input{padding-right:42px;}
+.pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:#8c9bab;display:flex;align-items:center;}
+.pw-toggle:hover{color:var(--primary);}
+.pw-toggle svg{width:20px;height:20px;}
 input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{
   width:100%;padding:11px 13px;border:1.5px solid var(--hairline);border-radius:10px;font-size:14px;
   color:var(--ink);background:#fff;font-family:inherit;outline:none;transition:border-color .15s;appearance:none;-webkit-appearance:none;
@@ -205,11 +210,11 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
     </div>
     <div class="field" style="margin-bottom:14px">
       <label>Senha</label>
-      <input type="password" id="authPass" placeholder="Mínimo 6 caracteres" autocomplete="current-password"/>
+      <div class="pw-wrap"><input type="password" id="authPass" placeholder="Mínimo 6 caracteres" autocomplete="current-password"/><button type="button" class="pw-toggle" onclick="togglePw(this)" aria-label="Mostrar senha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
     </div>
     <div class="field" id="confirmField" style="margin-bottom:8px;display:none">
       <label>Confirmar senha</label>
-      <input type="password" id="authPassConfirm" placeholder="Digite a senha novamente" autocomplete="new-password"/>
+      <div class="pw-wrap"><input type="password" id="authPassConfirm" placeholder="Digite a senha novamente" autocomplete="new-password"/><button type="button" class="pw-toggle" onclick="togglePw(this)" aria-label="Mostrar senha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
     </div>
     <p class="hint" id="passReq" style="display:none;margin-bottom:18px;line-height:1.5">A senha precisa ter ao menos: <b>6 caracteres</b>, <b>uma letra minúscula</b> e <b>um caractere especial</b> (ex: ! @ # $ %).</p>
     <button class="btn-primary" id="btnAuth" style="width:100%">Entrar</button>
@@ -226,11 +231,11 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
     <p class="sub">Defina uma nova senha para sua conta.</p>
     <div class="field" style="margin-bottom:14px">
       <label>Nova senha</label>
-      <input type="password" id="newPass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
+      <div class="pw-wrap"><input type="password" id="newPass" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/><button type="button" class="pw-toggle" onclick="togglePw(this)" aria-label="Mostrar senha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
     </div>
     <div class="field" style="margin-bottom:8px">
       <label>Confirmar nova senha</label>
-      <input type="password" id="newPassConfirm" placeholder="Digite novamente" autocomplete="new-password"/>
+      <div class="pw-wrap"><input type="password" id="newPassConfirm" placeholder="Digite novamente" autocomplete="new-password"/><button type="button" class="pw-toggle" onclick="togglePw(this)" aria-label="Mostrar senha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
     </div>
     <p class="hint" style="margin-bottom:18px;line-height:1.5">A senha precisa ter ao menos: <b>6 caracteres</b>, <b>uma letra minúscula</b> e <b>um caractere especial</b> (ex: ! @ # $ %).</p>
     <button class="btn-primary" id="btnNewPass" style="width:100%">Salvar nova senha</button>
@@ -413,6 +418,15 @@ const SUPABASE_URL = 'https://lipienluttpbtcbffdhv.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpcGllbmx1dHRwYnRjYmZmZGh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTE2MDgsImV4cCI6MjA5NTcyNzYwOH0.v1m4ULoPDi54M7gPEEdyMCgp6zV2fyp0GUrMujLexn0';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
+
+function togglePw(btn){
+  var inp=btn.parentElement.querySelector('input');
+  var show=inp.type==='password';
+  inp.type=show?'text':'password';
+  btn.innerHTML=show
+    ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+    :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+}
 const ASSOC = {'Médico':'CRM','Dentista':'CRO','Fisioterapeuta':'CREFITO','Nutricionista':'CRN','Psicólogo':'CRP','Enfermeiro':'Coren','Bioquímico':'CRQ','Outro':''};
 const CONVENIOS = ['Sense Consulta','Unimed','Evo Saúde','Medprev','Usisaúde','Hapvida','Bradesco Saúde','Cartão de Todos'];
 let tags = [];
@@ -586,8 +600,15 @@ $('btnSave').onclick=async()=>{
   if($('valor_consulta').value==='')faltando.push('valor_consulta');
   if(faltando.length){markErr(faltando);toast('Preencha os campos obrigatórios','err');return;}
 
+  // Verifica registro duplicado (outro profissional com mesmo número)
   $('btnSave').disabled=true;$('saveLabel').textContent='Salvando…';
   try{
+    const {data:regDup}=await sb.from('profissionais').select('user_id,nome_completo').eq('numero_registro',registro).eq('uf',uf).neq('user_id',currentUser.id).maybeSingle();
+    if(regDup){
+      toast('Já existe um profissional cadastrado com este número de registro ('+registro+'/'+uf+'): '+regDup.nome_completo,'err');
+      $('btnSave').disabled=false;$('saveLabel').textContent='Salvar e publicar';
+      return;
+    }
     // Preserva a foto_url atual e o estado de aprovação se não há arquivo novo
     let fotoUrl = null;
     let jaAprovado = false;
@@ -604,7 +625,9 @@ $('btnSave').onclick=async()=>{
       const {data:pub}=sb.storage.from('perfis').getPublicUrl(path);
       fotoUrl=pub.publicUrl+'?t='+Date.now();
     }
-    const slug=slugify(nome+'-'+especialidade);
+    let slug=slugify(nome+'-'+especialidade);
+    const {data:slugDup}=await sb.from('profissionais').select('user_id').eq('slug',slug).neq('user_id',currentUser.id).maybeSingle();
+    if(slugDup){slug=slug+'-'+currentUser.id.slice(0,6);}
     const valorConsulta = $('valor_consulta').value!==''? parseFloat($('valor_consulta').value) : null;
     const descAvista = $('desconto_avista').value!==''? parseInt($('desconto_avista').value,10) : null;
     const parc = $('parcelamento').value!==''? parseInt($('parcelamento').value,10) : null;
