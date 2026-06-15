@@ -199,7 +199,7 @@ tr.row-pending td:first-child{box-shadow:inset 3px 0 0 var(--primary);}
     <h2>Acesso restrito</h2>
     <p>Área exclusiva para administradores da Sense.</p>
     <div class="field"><label>E-mail</label><input type="email" id="aEmail" placeholder="admin@email.com" autocomplete="email"/></div>
-    <div class="field"><label>Senha</label><input type="password" id="aPass" placeholder="Senha" autocomplete="current-password"/></div>
+    <div class="field"><label>Senha</label><div class="pw-wrap"><input type="password" id="aPass" placeholder="Senha" autocomplete="current-password"/><button type="button" class="pw-toggle" onclick="togglePw(this)" aria-label="Mostrar senha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
     <button class="btn-primary" id="btnLogin">Entrar</button>
     <p class="hint-msg" id="loginHint"></p>
   </div>
@@ -343,6 +343,15 @@ tr.row-pending td:first-child{box-shadow:inset 3px 0 0 var(--primary);}
 const SUPABASE_URL='https://lipienluttpbtcbffdhv.supabase.co';
 const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpcGllbmx1dHRwYnRjYmZmZGh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTE2MDgsImV4cCI6MjA5NTcyNzYwOH0.v1m4ULoPDi54M7gPEEdyMCgp6zV2fyp0GUrMujLexn0';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+
+function togglePw(btn){
+  var inp=btn.parentElement.querySelector('input');
+  var show=inp.type==='password';
+  inp.type=show?'text':'password';
+  btn.innerHTML=show
+    ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+    :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+}
 const $=id=>document.getElementById(id);
 let allProfs=[], editingId=null, deletingId=null;
 
