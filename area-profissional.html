@@ -625,9 +625,11 @@ $('btnSave').onclick=async()=>{
       const {data:pub}=sb.storage.from('perfis').getPublicUrl(path);
       fotoUrl=pub.publicUrl+'?t='+Date.now();
     }
-    let slug=slugify(nome+'-'+especialidade);
-    const {data:slugDup}=await sb.from('profissionais').select('user_id').eq('slug',slug).neq('user_id',currentUser.id).maybeSingle();
-    if(slugDup){slug=slug+'-'+currentUser.id.slice(0,6);}
+    const slugBase=slugify(nome+'-'+especialidade);
+    let slug=slugBase;
+    // Verificação prévia de slug duplicado (pode falhar silenciosamente por RLS)
+    const {data:slugDup}=await sb.from('profissionais').select('user_id').eq('slug',slugBase).neq('user_id',currentUser.id).maybeSingle();
+    if(slugDup){slug=slugBase+'-'+currentUser.id.slice(0,6);}
     const valorConsulta = $('valor_consulta').value!==''? parseFloat($('valor_consulta').value) : null;
     const descAvista = $('desconto_avista').value!==''? parseInt($('desconto_avista').value,10) : null;
     const parc = $('parcelamento').value!==''? parseInt($('parcelamento').value,10) : null;
@@ -655,7 +657,13 @@ $('btnSave').onclick=async()=>{
       aprovado:jaAprovado,
       publicado:jaAprovado
     };
-    const {data,error}=await sb.from('profissionais').upsert(row,{onConflict:'user_id'}).select().single();
+    let {data,error}=await sb.from('profissionais').upsert(row,{onConflict:'user_id'}).select().single();
+    // Retry: se a constraint de slug ainda conflitar (ex: RLS impediu a checagem prévia),
+    // tenta novamente com sufixo baseado no user_id — garante unicidade sem consulta extra.
+    if(error && error.message && error.message.includes('profissionais_slug_key')){
+      row.slug=slugBase+'-'+currentUser.id.slice(0,6);
+      ({data,error}=await sb.from('profissionais').upsert(row,{onConflict:'user_id'}).select().single());
+    }
     if(error)throw error;
     existingId=data.id;fotoFile=null;updateStatusBox(data);
     toast(jaAprovado?'Perfil atualizado com sucesso!':'Perfil enviado para aprovação!','ok');
