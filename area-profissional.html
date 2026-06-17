@@ -106,6 +106,12 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
 .tag-input{border:none!important;outline:none!important;box-shadow:none!important;padding:4px!important;font-size:13px;background:transparent!important;min-width:120px;flex:1;height:28px;}
 .tags-counter{font-size:11px;color:var(--muted);margin-top:4px;text-align:right;}
 .tags-counter.over{color:var(--err);}
+.tags-box.field-err{border-color:var(--err)!important;box-shadow:0 0 0 3px rgba(224,98,83,.12)!important;}
+.tags-box.field-err:focus-within{border-color:var(--err)!important;box-shadow:0 0 0 3px rgba(224,98,83,.18)!important;}
+.tags-hint{display:none;margin-top:6px;align-items:flex-start;gap:7px;line-height:1.45;}
+.tags-hint.visible{display:flex;}
+.tags-hint-icon{flex-shrink:0;width:17px;height:17px;border-radius:50%;background:var(--err);color:#fff;font-size:10px;font-style:italic;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+.tags-hint-msg{font-size:12.5px;color:var(--err);}
 
 /* CONVÊNIOS */
 .conv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;}
@@ -345,6 +351,7 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
           <label>Tratamentos realizados <span class="req">*</span></label>
           <div class="tags-box" id="tagsBox"><input class="tag-input" id="tagInput" type="text" placeholder="Digite e pressione Enter…" maxlength="45"/></div>
           <div class="tags-counter" id="tagsCounter">0 tratamentos · máx. 45 caracteres por item</div>
+          <div class="tags-hint" id="tagsHint"><span class="tags-hint-icon">i</span><span id="tagsHintMsg"></span></div>
         </div>
         <div class="field" style="margin-top:16px">
           <label>Convênios que atende</label>
@@ -510,6 +517,7 @@ function renderTags(){
   tagsBox.querySelectorAll('.tag-pill').forEach(e=>e.remove());
   tags.forEach((t,i)=>{const p=document.createElement('div');p.className='tag-pill';p.innerHTML='<span></span><button class="x">×</button>';p.querySelector('span').textContent=t;p.querySelector('.x').onclick=()=>{tags.splice(i,1);renderTags();};tagsBox.insertBefore(p,tagInput);});
   const n=tags.length;tagsCounter.className='tags-counter';tagsCounter.textContent=n+' tratamento'+(n!==1?'s':'')+' · máx. 45 caracteres por item';
+  if(n>0){const tb=$('tagsBox');if(tb)tb.classList.remove('field-err');const th=$('tagsHint');if(th)th.classList.remove('visible');}
 }
 function renderConvenios(){
   const box=$('conveniosBox');
@@ -581,7 +589,7 @@ function updateStatusBox(p){
 
 /* ---------- SAVE ---------- */
 function markErr(ids){ids.forEach(id=>$(id).classList.add('field-err'));}
-function clearErr(){document.querySelectorAll('.field-err').forEach(e=>e.classList.remove('field-err'));}
+function clearErr(){document.querySelectorAll('.field-err').forEach(e=>e.classList.remove('field-err'));const h=$('tagsHint');if(h){h.classList.remove('visible');}}
 
 $('btnSave').onclick=async()=>{
   clearErr();
@@ -596,7 +604,17 @@ $('btnSave').onclick=async()=>{
   if(!especialidade)faltando.push('especialidade');
   if(!registro)faltando.push('numero_registro');
   if(!uf)faltando.push('uf');
-  if(!tags.length)faltando.push('tagInput');
+  if(!tags.length){
+    faltando.push('tagsBox');
+    const pendente=tagInput.value.trim();
+    const hintMsg=$('tagsHintMsg');
+    if(pendente){
+      hintMsg.innerHTML='Você digitou <strong>"'+pendente+'"</strong> mas não confirmou — pressione <strong>Enter</strong> para adicioná-lo.';
+    }else{
+      hintMsg.innerHTML='Adicione ao menos um tratamento e pressione <strong>Enter</strong> para confirmá-lo.';
+    }
+    $('tagsHint').classList.add('visible');
+  }
   if($('valor_consulta').value==='')faltando.push('valor_consulta');
   if(faltando.length){markErr(faltando);toast('Preencha os campos obrigatórios','err');return;}
 
