@@ -36,6 +36,8 @@ img{max-width:100%;display:block;}
 .profile-main-section{background:#f7f7f7;border-radius:20px;padding:36px;margin:0 0 32px;}
 .section-title-lg{font-size:22px;font-weight:800;margin-bottom:16px;letter-spacing:-.01em;}
 .content-section{background:#f7f7f7;border-radius:20px;padding:32px;margin-bottom:20px;}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;}
+.gallery-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;cursor:pointer;display:block;}
 .content-title{font-size:18px;font-weight:800;margin-bottom:20px;letter-spacing:-.01em;}
 .content-subtitle{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6a7a85;margin-bottom:8px;margin-top:16px;}
 .content-subtitle:first-child{margin-top:0;}
@@ -124,6 +126,10 @@ img{max-width:100%;display:block;}
   </section>
 
   <div class="container">
+    <div class="content-section" id="secGaleria" style="display:none">
+      <h3 class="content-title">Fotos</h3>
+      <div class="gallery-grid" id="pGaleria"></div>
+    </div>
     <div class="content-section" id="secTratamentos" style="display:none">
       <h3 class="content-title">Tratamentos</h3>
       <div class="treat-chips" id="pTratamentos"></div>
@@ -192,6 +198,7 @@ function render(p){
   if(p.instagram){const ig=p.instagram.replace('@','');acts.push('<a class="btn-ghost" target="_blank" href="https://instagram.com/'+esc(ig)+'">Instagram</a>');}
   $('pActions').innerHTML=acts.join('');
 
+  if(Array.isArray(p.fotos_urls)&&p.fotos_urls.length){$('secGaleria').style.display='block';$('pGaleria').innerHTML=p.fotos_urls.map(u=>'<img src="'+esc(u)+'" alt="" onclick="window.open(this.src,\'_blank\')"/>').join('');}
   if(Array.isArray(p.tratamentos)&&p.tratamentos.length){$('secTratamentos').style.display='block';$('pTratamentos').innerHTML=p.tratamentos.map(t=>'<span class="treat-chip">'+esc(t)+'</span>').join('');}
   if(Array.isArray(p.convenios)&&p.convenios.length){$('secConvenios').style.display='block';$('pConvenios').innerHTML=p.convenios.map(c=>'<span class="conv-badge">'+esc(c)+'</span>').join('');}
   const formLines=lines(p.formacao_especializacao);

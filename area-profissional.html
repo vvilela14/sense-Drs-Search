@@ -128,6 +128,14 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
 .upload-area .pick{color:var(--primary);font-weight:600;}
 .foto-preview{width:96px;height:96px;border-radius:12px;object-fit:cover;border:2px solid var(--hairline);margin:0 auto 10px;}
 
+/* GALERIA */
+.galeria-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-bottom:12px;}
+.galeria-grid:empty{margin-bottom:0;}
+.galeria-item{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1.5px solid var(--hairline);}
+.galeria-item img{width:100%;height:100%;object-fit:cover;}
+.galeria-item .rm{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(6,37,51,.65);color:#fff;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;}
+.galeria-item .rm:hover{background:var(--err);}
+
 .divider{height:1px;background:var(--hairline-soft);margin:20px 0;}
 
 /* ACTIONS */
@@ -280,7 +288,7 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
           <div class="upload-area" id="fotoArea">
             <div class="ico">⬆</div>
             <p>Arraste ou <span class="pick">selecione uma foto</span></p>
-            <p class="hint" style="margin-top:2px">JPG ou PNG · máx. 5 MB · proporção 1:1 recomendada</p>
+            <p class="hint" style="margin-top:2px">JPG ou PNG · máx. 5 MB · áreas que não preencherem o quadro serão completadas com o coral da Sense</p>
           </div>
           <input type="file" id="fotoInput" accept="image/jpeg,image/png,image/webp" style="display:none"/>
         </div>
@@ -410,6 +418,23 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
       </div>
     </div>
 
+    <!-- SEÇÃO 6 — GALERIA -->
+    <div class="section-card">
+      <div class="section-head"><div class="section-num">6</div><div class="section-name">Galeria de Fotos</div></div>
+      <div class="section-body">
+        <div class="field">
+          <label>Fotos adicionais</label>
+          <div class="galeria-grid" id="galeriaGrid"></div>
+          <div class="upload-area" id="galeriaArea">
+            <div class="ico">⬆</div>
+            <p>Arraste ou <span class="pick">selecione fotos</span></p>
+            <p class="hint" style="margin-top:2px">JPG ou PNG · máx. 5 MB cada · até 6 fotos</p>
+          </div>
+          <input type="file" id="galeriaInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none"/>
+        </div>
+      </div>
+    </div>
+
     <div class="actions">
       <button class="btn-outline" id="btnPreview">Ver minha página</button>
       <button class="btn-primary" id="btnSave"><span id="saveLabel">Salvar e publicar</span></button>
@@ -441,7 +466,32 @@ let convenios = [];
 let currentUser = null;
 let existingId = null;
 let fotoFile = null;
+let galeriaFiles = [];
+let galeriaUrls = [];
 let authMode = 'login';
+
+/* Compõe a foto de perfil num canvas com fundo coral da Sense, preenchendo
+   qualquer sobra de enquadramento em vez de deixar fundo branco/transparente. */
+function compositarFotoComFundoCoral(file){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const W=480,H=640;
+      const canvas=document.createElement('canvas');
+      canvas.width=W;canvas.height=H;
+      const ctx=canvas.getContext('2d');
+      ctx.fillStyle='#e06253';
+      ctx.fillRect(0,0,W,H);
+      const scale=Math.min(W/img.width,H/img.height);
+      const w=img.width*scale,h=img.height*scale;
+      ctx.drawImage(img,(W-w)/2,(H-h)/2,w,h);
+      URL.revokeObjectURL(img.src);
+      canvas.toBlob(blob=>resolve(blob),'image/jpeg',0.92);
+    };
+    img.onerror=reject;
+    img.src=URL.createObjectURL(file);
+  });
+}
 
 const $ = id => document.getElementById(id);
 function toast(msg, type){const t=$('toast');t.textContent=msg;t.className='toast show'+(type?(' '+type):'');setTimeout(()=>t.className='toast',type==='err'?4000:2800);}
@@ -541,10 +591,46 @@ tagInput.addEventListener('keydown',e=>{
 });
 
 $('fotoArea').onclick=()=>$('fotoInput').click();
-$('fotoInput').onchange=e=>{
+$('fotoInput').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
   if(f.size>5*1024*1024){toast('A foto excede 5 MB','err');return;}
-  fotoFile=f;const r=new FileReader();r.onload=ev=>{$('fotoPreview').src=ev.target.result;$('fotoPreview').style.display='block';};r.readAsDataURL(f);
+  fotoFile=f;
+  const blob=await compositarFotoComFundoCoral(f);
+  $('fotoPreview').src=URL.createObjectURL(blob);$('fotoPreview').style.display='block';
+};
+
+/* ---------- GALERIA DE FOTOS ----------
+   galeriaUrls: URLs já salvas no Storage (strings).
+   galeriaFiles: { file, previewUrl } pendentes de upload no próximo save. */
+function renderGaleria(){
+  const grid=$('galeriaGrid');
+  const existentes=galeriaUrls.map((url,i)=>
+    '<div class="galeria-item"><img src="'+url+'"/><button type="button" class="rm" data-type="existing" data-i="'+i+'">×</button></div>'
+  );
+  const pendentes=galeriaFiles.map((p,i)=>
+    '<div class="galeria-item"><img src="'+p.previewUrl+'"/><button type="button" class="rm" data-type="pending" data-i="'+i+'">×</button></div>'
+  );
+  grid.innerHTML=existentes.concat(pendentes).join('');
+  grid.querySelectorAll('.rm').forEach(btn=>{
+    btn.onclick=()=>{
+      const i=parseInt(btn.dataset.i,10);
+      if(btn.dataset.type==='existing'){galeriaUrls.splice(i,1);}
+      else{URL.revokeObjectURL(galeriaFiles[i].previewUrl);galeriaFiles.splice(i,1);}
+      renderGaleria();
+    };
+  });
+  $('galeriaArea').style.display = (galeriaUrls.length+galeriaFiles.length)>=6 ? 'none' : '';
+}
+$('galeriaArea').onclick=()=>$('galeriaInput').click();
+$('galeriaInput').onchange=e=>{
+  const files=Array.from(e.target.files||[]);
+  e.target.value='';
+  for(const f of files){
+    if(galeriaUrls.length+galeriaFiles.length>=6){toast('Máximo de 6 fotos na galeria','err');break;}
+    if(f.size>5*1024*1024){toast('"'+f.name+'" excede 5 MB','err');continue;}
+    galeriaFiles.push({file:f,previewUrl:URL.createObjectURL(f)});
+  }
+  renderGaleria();
 };
 
 /* ---------- LOAD EXISTING PROFILE ---------- */
@@ -570,6 +656,7 @@ function fillForm(p){
   $('desconto_avista').value=(p.desconto_avista!=null)?p.desconto_avista:'';
   $('parcelamento').value=(p.parcelamento!=null)?String(p.parcelamento):'';
   if(p.foto_url){$('fotoPreview').src=p.foto_url;$('fotoPreview').style.display='block';}
+  galeriaUrls=Array.isArray(p.fotos_urls)?p.fotos_urls.slice():[];galeriaFiles=[];renderGaleria();
   updateStatusBox(p);
 }
 function updateStatusBox(p){
@@ -636,12 +723,21 @@ $('btnSave').onclick=async()=>{
       jaAprovado = !!(cur && cur.aprovado);
     }
     if(fotoFile){
-      const ext=fotoFile.name.split('.').pop().toLowerCase();
-      const path=currentUser.id+'/foto.'+ext;
-      const {error:upErr}=await sb.storage.from('perfis').upload(path,fotoFile,{upsert:true,contentType:fotoFile.type});
+      const blob=await compositarFotoComFundoCoral(fotoFile);
+      const path=currentUser.id+'/foto.jpg';
+      const {error:upErr}=await sb.storage.from('perfis').upload(path,blob,{upsert:true,contentType:'image/jpeg'});
       if(upErr)throw upErr;
       const {data:pub}=sb.storage.from('perfis').getPublicUrl(path);
       fotoUrl=pub.publicUrl+'?t='+Date.now();
+    }
+    // Upload das fotos pendentes da galeria; mantém as já existentes (galeriaUrls)
+    for(const p of galeriaFiles){
+      const ext=p.file.name.split('.').pop().toLowerCase();
+      const path=currentUser.id+'/galeria/'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+      const {error:upErr}=await sb.storage.from('perfis').upload(path,p.file,{contentType:p.file.type});
+      if(upErr)throw upErr;
+      const {data:pub}=sb.storage.from('perfis').getPublicUrl(path);
+      galeriaUrls.push(pub.publicUrl);
     }
     const slugBase=slugify(nome+'-'+especialidade);
     let slug=slugBase;
@@ -670,7 +766,7 @@ $('btnSave').onclick=async()=>{
       whatsapp:$('whatsapp').value.trim()||null,
       instagram:$('instagram').value.trim()||null,
       email_contato:$('email_contato').value.trim()||null,
-      foto_url:fotoUrl,slug,
+      foto_url:fotoUrl,fotos_urls:galeriaUrls,slug,
       // Aprovação: perfis já aprovados continuam publicados; novos ficam pendentes
       aprovado:jaAprovado,
       publicado:jaAprovado
@@ -683,7 +779,9 @@ $('btnSave').onclick=async()=>{
       ({data,error}=await sb.from('profissionais').upsert(row,{onConflict:'user_id'}).select().single());
     }
     if(error)throw error;
-    existingId=data.id;fotoFile=null;updateStatusBox(data);
+    existingId=data.id;fotoFile=null;galeriaFiles.forEach(p=>URL.revokeObjectURL(p.previewUrl));galeriaFiles=[];
+    galeriaUrls=Array.isArray(data.fotos_urls)?data.fotos_urls.slice():galeriaUrls;renderGaleria();
+    updateStatusBox(data);
     toast(jaAprovado?'Perfil atualizado com sucesso!':'Perfil enviado para aprovação!','ok');
   }catch(e){
     toast('Erro ao salvar: '+(e.message||e),'err');

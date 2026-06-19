@@ -133,6 +133,10 @@
     .treat-chip{background:var(--primary-cream);color:var(--primary-hover);font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-full);}
     /* rating */
     .rating-row{display:flex;align-items:center;gap:4px;margin-top:6px;}
+    /* mídia — fotos adicionais do profissional */
+    .media-row{display:flex;align-items:center;gap:5px;margin-top:6px;}
+    .media-thumb{width:34px;height:34px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--hairline-soft);}
+    .media-more{font-size:11px;font-weight:700;color:var(--muted);background:var(--primary-cream);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
     .star{color:#f59e0b;font-size:11px;letter-spacing:1px;}
     .rating-val{font-size:12px;font-weight:700;}
     .rating-new{font-size:11px;color:var(--muted);}
@@ -291,6 +295,8 @@ function cardHTML(p){
   const crm=[((p.associacao_sigla||'')+' '+(p.numero_registro||'')).trim()+(p.uf?'/'+p.uf:''),(p.rqe?'RQE '+p.rqe:'')].filter(Boolean).join(' · ');
   const tr=Array.isArray(p.tratamentos)?p.tratamentos:[];
   const chips=tr.slice(0,3).map(t=>'<span class="treat-chip">'+esc(t.length>30?t.slice(0,28)+'…':t)+'</span>').join('')+(tr.length>3?'<span class="treat-chip">+'+(tr.length-3)+'</span>':'');
+  const fotos=Array.isArray(p.fotos_urls)?p.fotos_urls:[];
+  const media=fotos.length?'<div class="media-row">'+fotos.slice(0,4).map(u=>'<img class="media-thumb" src="'+esc(u)+'" alt=""/>').join('')+(fotos.length>4?'<span class="media-more">+'+(fotos.length-4)+'</span>':'')+'</div>':'';
   const ig=p.instagram?'<a href="https://instagram.com/'+esc(p.instagram.replace('@',''))+'" target="_blank" class="ig-link">'+IG+' Instagram</a>':'<span></span>';
   const wa=p.whatsapp?'https://api.whatsapp.com/send/?phone=55'+waNum(p.whatsapp)+'&text&type=phone_number':'#';
   return '<div class="doctor-card" data-name="'+esc(normalizeStr(nome))+'" data-specialty="'+esc(normalizeStr(p.especialidade||''))+'" onclick="if(!event.target.closest(\'a\'))location.href=\'perfil.html?id='+encodeURIComponent(p.slug)+'\'">'
@@ -299,6 +305,7 @@ function cardHTML(p){
     +'<div class="card-top-row"><div><p class="doctor-name">'+esc(nome)+'</p><p class="doctor-specialty">'+esc(p.especialidade||p.categoria||'')+'</p></div><span class="verified-badge">'+VERIF+' Verificado</span></div>'
     +(crm?'<p class="crm-tag">'+esc(crm)+'</p>':'')
     +(chips?'<div class="treat-row">'+chips+'</div>':'')
+    +media
     +'<div class="rating-row"><span class="star">★★★★★</span><span class="rating-val">5.0</span><span class="rating-new">(Novo)</span></div>'
     +'<div class="card-footer">'+ig+'<div class="card-actions">'
     +'<a href="perfil.html?id='+encodeURIComponent(p.slug)+'" class="btn-sm btn-outline-sm">Perfil '+ARR+'</a>'
