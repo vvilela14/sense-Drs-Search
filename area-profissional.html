@@ -158,11 +158,14 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
 .crop-modal{position:fixed;inset:0;background:rgba(6,37,51,.65);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
 .crop-modal-inner{background:#fff;border-radius:var(--r-lg);padding:24px;max-width:340px;width:100%;}
 .crop-modal-inner h3{font-size:18px;font-weight:800;letter-spacing:-.01em;}
-.crop-canvas-wrap{display:flex;justify-content:center;background:repeating-conic-gradient(#eee 0% 25%,#fff 0% 50%) 0 0/16px 16px;border-radius:12px;overflow:hidden;}
+.crop-canvas-wrap{display:flex;justify-content:center;border-radius:12px;overflow:hidden;}
 #cropCanvas{display:block;cursor:grab;touch-action:none;}
 #cropCanvas:active{cursor:grabbing;}
 .crop-modal-actions{display:flex;gap:10px;margin-top:18px;}
 .crop-modal-actions button{flex:1;}
+.crop-palette{display:flex;flex-wrap:wrap;gap:10px;}
+.crop-swatch{width:34px;height:34px;border-radius:50%;cursor:pointer;border:2px solid transparent;padding:2px;display:flex;align-items:center;justify-content:center;background-clip:content-box;transition:border-color .15s;}
+.crop-swatch.selected{border-color:var(--primary);}
 </style>
   <!-- Meta Pixel Code -->
   <script>
@@ -463,6 +466,8 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
       <canvas id="cropCanvas" width="280" height="373"></canvas>
     </div>
     <input type="range" id="cropZoom" min="100" max="300" value="100" style="width:100%;margin-top:14px"/>
+    <p class="hint" style="margin:16px 0 8px;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.04em">Paleta de cores</p>
+    <div class="crop-palette" id="cropPalette"></div>
     <div class="crop-modal-actions">
       <button class="btn-outline" id="cropCancelar">Cancelar</button>
       <button class="btn-primary" id="cropConfirmar">Usar esta foto</button>
@@ -558,12 +563,27 @@ function segmentarFundo(file){
 
 /* ---------- AJUSTE DE FOTO (zoom + arrastar) ---------- */
 const CROP_W=480,CROP_H=640;
+const CROP_CORES=['#fbf3ec','#ffd0b2','#feddd6','#ffffff','#e8f0fe','#e6f4ea','#fdf0d5','#f0e6f6','#d6e4f0','#f5e6e8'];
 let cropSource=null,cropSrcW=0,cropSrcH=0;
 let cropZoom=1,cropPanX=0,cropPanY=0;
+let cropBgColor=CROP_CORES[0];
 let cropDragging=false,cropDragStartX=0,cropDragStartY=0,cropPanStartX=0,cropPanStartY=0;
 const cropCanvas=document.getElementById('cropCanvas');
 const cropCtx=cropCanvas.getContext('2d');
 
+function renderCropPalette(){
+  const box=document.getElementById('cropPalette');
+  box.innerHTML=CROP_CORES.map(c=>
+    '<div class="crop-swatch'+(c===cropBgColor?' selected':'')+'" data-cor="'+c+'" style="background-color:'+c+'"></div>'
+  ).join('');
+  box.querySelectorAll('.crop-swatch').forEach(sw=>{
+    sw.onclick=()=>{
+      cropBgColor=sw.dataset.cor;
+      renderCropPalette();
+      desenharCropPreview();
+    };
+  });
+}
 function cropLimites(){
   const escalaBase=Math.max(cropCanvas.width/cropSrcW,cropCanvas.height/cropSrcH)*cropZoom;
   const imgW=cropSrcW*escalaBase,imgH=cropSrcH*escalaBase;
@@ -576,6 +596,8 @@ function cropClampPan(){
 }
 function desenharCropPreview(){
   cropCtx.clearRect(0,0,cropCanvas.width,cropCanvas.height);
+  cropCtx.fillStyle=cropBgColor;
+  cropCtx.fillRect(0,0,cropCanvas.width,cropCanvas.height);
   const {escalaBase,imgW,imgH}=cropLimites();
   const x=(cropCanvas.width-imgW)/2+cropPanX;
   const y=(cropCanvas.height-imgH)/2+cropPanY;
@@ -583,8 +605,9 @@ function desenharCropPreview(){
 }
 function abrirCropModal(source,srcW,srcH){
   cropSource=source;cropSrcW=srcW;cropSrcH=srcH;
-  cropZoom=1;cropPanX=0;cropPanY=0;
+  cropZoom=1;cropPanX=0;cropPanY=0;cropBgColor=CROP_CORES[0];
   $('cropZoom').value=100;
+  renderCropPalette();
   desenharCropPreview();
   $('cropModal').style.display='flex';
 }
@@ -624,6 +647,8 @@ $('cropConfirmar').onclick=()=>{
   const canvas=document.createElement('canvas');
   canvas.width=CROP_W;canvas.height=CROP_H;
   const ctx=canvas.getContext('2d');
+  ctx.fillStyle=cropBgColor;
+  ctx.fillRect(0,0,CROP_W,CROP_H);
   const fator=CROP_W/cropCanvas.width;
   const escalaBase=Math.max(CROP_W/cropSrcW,CROP_H/cropSrcH)*cropZoom;
   const imgW=cropSrcW*escalaBase,imgH=cropSrcH*escalaBase;
