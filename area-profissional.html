@@ -594,9 +594,15 @@ function cropClampPan(){
   cropPanX=Math.max(-margemX,Math.min(margemX,cropPanX));
   cropPanY=Math.max(-margemY,Math.min(margemY,cropPanY));
 }
+function cropGradiente(ctx,w,h){
+  const grad=ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)*0.75);
+  grad.addColorStop(0,cropBgColor);
+  grad.addColorStop(1,'#ffffff');
+  return grad;
+}
 function desenharCropPreview(){
   cropCtx.clearRect(0,0,cropCanvas.width,cropCanvas.height);
-  cropCtx.fillStyle=cropBgColor;
+  cropCtx.fillStyle=cropGradiente(cropCtx,cropCanvas.width,cropCanvas.height);
   cropCtx.fillRect(0,0,cropCanvas.width,cropCanvas.height);
   const {escalaBase,imgW,imgH}=cropLimites();
   const x=(cropCanvas.width-imgW)/2+cropPanX;
@@ -647,7 +653,7 @@ $('cropConfirmar').onclick=()=>{
   const canvas=document.createElement('canvas');
   canvas.width=CROP_W;canvas.height=CROP_H;
   const ctx=canvas.getContext('2d');
-  ctx.fillStyle=cropBgColor;
+  ctx.fillStyle=cropGradiente(ctx,CROP_W,CROP_H);
   ctx.fillRect(0,0,CROP_W,CROP_H);
   const fator=CROP_W/cropCanvas.width;
   const escalaBase=Math.max(CROP_W/cropSrcW,CROP_H/cropSrcH)*cropZoom;
