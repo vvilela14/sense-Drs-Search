@@ -288,7 +288,7 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
           <div class="upload-area" id="fotoArea">
             <div class="ico">⬆</div>
             <p>Arraste ou <span class="pick">selecione uma foto</span></p>
-            <p class="hint" style="margin-top:2px">JPG ou PNG · máx. 5 MB · áreas que não preencherem o quadro serão completadas com o coral da Sense</p>
+            <p class="hint" style="margin-top:2px">JPG ou PNG · máx. 5 MB · o fundo é removido automaticamente e substituído pelo coral da Sense</p>
           </div>
           <input type="file" id="fotoInput" accept="image/jpeg,image/png,image/webp" style="display:none"/>
         </div>
@@ -445,6 +445,43 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Segmentação de pessoa (remoção de fundo) via MediaPipe — roda 100% no navegador, sem custo de API -->
+<script type="module">
+import { FilesetResolver, ImageSegmenter } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest';
+let segmenterPromise=null;
+function getSegmenter(){
+  if(!segmenterPromise){
+    segmenterPromise=(async()=>{
+      const vision=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm');
+      return ImageSegmenter.createFromOptions(vision,{
+        baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite'},
+        outputConfidenceMasks:true
+      });
+    })();
+  }
+  return segmenterPromise;
+}
+/* Recebe um <img> e devolve um canvas do mesmo conteúdo, mas com o fundo
+   transparente (só a pessoa fica opaca) — pronto pra desenhar sobre o coral. */
+window.segmentarPessoa=async function(imgEl){
+  const segmenter=await getSegmenter();
+  const result=segmenter.segment(imgEl);
+  const confMask=result.confidenceMasks[0];
+  const mw=confMask.width, mh=confMask.height;
+  const dados=confMask.getAsFloat32Array();
+  confMask.close();result.close();
+  const off=document.createElement('canvas');
+  off.width=mw;off.height=mh;
+  const octx=off.getContext('2d');
+  octx.drawImage(imgEl,0,0,mw,mh);
+  const imgData=octx.getImageData(0,0,mw,mh);
+  for(let i=0;i<mw*mh;i++){imgData.data[i*4+3]=Math.round(dados[i]*255);}
+  octx.putImageData(imgData,0,0);
+  return off;
+};
+</script>
+
 <script>
 const SUPABASE_URL = 'https://lipienluttpbtcbffdhv.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpcGllbmx1dHRwYnRjYmZmZGh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTE2MDgsImV4cCI6MjA5NTcyNzYwOH0.v1m4ULoPDi54M7gPEEdyMCgp6zV2fyp0GUrMujLexn0';
@@ -470,21 +507,29 @@ let galeriaFiles = [];
 let galeriaUrls = [];
 let authMode = 'login';
 
-/* Compõe a foto de perfil num canvas com fundo coral da Sense, preenchendo
-   qualquer sobra de enquadramento em vez de deixar fundo branco/transparente. */
+/* Remove o fundo da foto (deixa só a pessoa) e desenha sobre um fundo coral da Sense.
+   Se a segmentação falhar (ex: sem internet pro modelo), cai de volta pro recorte
+   simples — a foto original centralizada sobre o coral, sem remover o fundo. */
 function compositarFotoComFundoCoral(file){
   return new Promise((resolve,reject)=>{
     const img=new Image();
-    img.onload=()=>{
+    img.onload=async()=>{
       const W=480,H=640;
       const canvas=document.createElement('canvas');
       canvas.width=W;canvas.height=H;
       const ctx=canvas.getContext('2d');
       ctx.fillStyle='#e06253';
       ctx.fillRect(0,0,W,H);
-      const scale=Math.min(W/img.width,H/img.height);
-      const w=img.width*scale,h=img.height*scale;
-      ctx.drawImage(img,(W-w)/2,(H-h)/2,w,h);
+      let source=img,srcW=img.width,srcH=img.height;
+      try{
+        const masked=await window.segmentarPessoa(img);
+        source=masked;srcW=masked.width;srcH=masked.height;
+      }catch(err){
+        console.warn('Remoção de fundo indisponível, usando foto original sobre o coral.',err);
+      }
+      const scale=Math.min(W/srcW,H/srcH);
+      const w=srcW*scale,h=srcH*scale;
+      ctx.drawImage(source,(W-w)/2,(H-h)/2,w,h);
       URL.revokeObjectURL(img.src);
       canvas.toBlob(blob=>resolve(blob),'image/jpeg',0.92);
     };
@@ -595,6 +640,7 @@ $('fotoInput').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
   if(f.size>5*1024*1024){toast('A foto excede 5 MB','err');return;}
   fotoFile=f;
+  toast('Removendo o fundo da foto…');
   const blob=await compositarFotoComFundoCoral(f);
   $('fotoPreview').src=URL.createObjectURL(blob);$('fotoPreview').style.display='block';
 };
