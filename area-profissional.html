@@ -126,7 +126,7 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
 .upload-area .ico{font-size:26px;color:#c9c9c9;}
 .upload-area p{font-size:13px;color:var(--muted);margin-top:4px;}
 .upload-area .pick{color:var(--primary);font-weight:600;}
-.foto-preview{width:96px;height:96px;border-radius:50%;object-fit:cover;border:2px solid var(--hairline);margin:0 auto 10px;}
+.foto-preview{width:96px;height:96px;border-radius:12px;object-fit:cover;background:#fff;border:2px solid var(--hairline);margin:0 auto 10px;}
 
 /* GALERIA */
 .galeria-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-bottom:12px;}
@@ -288,7 +288,7 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
           <div class="upload-area" id="fotoArea">
             <div class="ico">⬆</div>
             <p>Arraste ou <span class="pick">selecione uma foto</span></p>
-            <p class="hint" style="margin-top:2px">JPG ou PNG · máx. 5 MB · o fundo é removido automaticamente e a foto aparece em formato circular</p>
+            <p class="hint" style="margin-top:2px">JPG ou PNG · máx. 5 MB · o fundo é removido automaticamente</p>
           </div>
           <input type="file" id="fotoInput" accept="image/jpeg,image/png,image/webp" style="display:none"/>
         </div>
@@ -507,32 +507,30 @@ let galeriaFiles = [];
 let galeriaUrls = [];
 let authMode = 'login';
 
-/* Remove o fundo da foto (deixa só a pessoa) e desenha sobre um fundo creme da Sense,
-   já em formato quadrado (a foto é exibida em círculo via CSS nos cards e no perfil).
+/* Remove o fundo da foto (deixa só a pessoa) num canvas retangular transparente —
+   sem pintar nenhuma cor atrás; o branco do card aparece naturalmente por trás.
    Se a segmentação falhar (ex: sem internet pro modelo), cai de volta pro recorte
-   simples — a foto original centralizada sobre o fundo, sem remover o fundo real. */
+   simples — a foto original centralizada, sem remover o fundo real. */
 function compositarFotoDePerfil(file){
   return new Promise((resolve,reject)=>{
     const img=new Image();
     img.onload=async()=>{
-      const W=600,H=600;
+      const W=480,H=640;
       const canvas=document.createElement('canvas');
       canvas.width=W;canvas.height=H;
       const ctx=canvas.getContext('2d');
-      ctx.fillStyle='#fbf3ec';
-      ctx.fillRect(0,0,W,H);
       let source=img,srcW=img.width,srcH=img.height;
       try{
         const masked=await window.segmentarPessoa(img);
         source=masked;srcW=masked.width;srcH=masked.height;
       }catch(err){
-        console.warn('Remoção de fundo indisponível, usando foto original sobre o coral.',err);
+        console.warn('Remoção de fundo indisponível, usando foto original.',err);
       }
       const scale=Math.min(W/srcW,H/srcH);
       const w=srcW*scale,h=srcH*scale;
       ctx.drawImage(source,(W-w)/2,(H-h)/2,w,h);
       URL.revokeObjectURL(img.src);
-      canvas.toBlob(blob=>resolve(blob),'image/jpeg',0.92);
+      canvas.toBlob(blob=>resolve(blob),'image/png');
     };
     img.onerror=reject;
     img.src=URL.createObjectURL(file);
@@ -771,8 +769,8 @@ $('btnSave').onclick=async()=>{
     }
     if(fotoFile){
       const blob=await compositarFotoDePerfil(fotoFile);
-      const path=currentUser.id+'/foto.jpg';
-      const {error:upErr}=await sb.storage.from('perfis').upload(path,blob,{upsert:true,contentType:'image/jpeg'});
+      const path=currentUser.id+'/foto.png';
+      const {error:upErr}=await sb.storage.from('perfis').upload(path,blob,{upsert:true,contentType:'image/png'});
       if(upErr)throw upErr;
       const {data:pub}=sb.storage.from('perfis').getPublicUrl(path);
       fotoUrl=pub.publicUrl+'?t='+Date.now();
