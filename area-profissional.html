@@ -153,6 +153,16 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
 .toast.err{background:var(--err);}
 .toast.ok{background:var(--ok);}
 .field-err{border-color:var(--err)!important;}
+
+/* AJUSTE DE FOTO (crop) */
+.crop-modal{position:fixed;inset:0;background:rgba(6,37,51,.65);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.crop-modal-inner{background:#fff;border-radius:var(--r-lg);padding:24px;max-width:340px;width:100%;}
+.crop-modal-inner h3{font-size:18px;font-weight:800;letter-spacing:-.01em;}
+.crop-canvas-wrap{display:flex;justify-content:center;background:repeating-conic-gradient(#eee 0% 25%,#fff 0% 50%) 0 0/16px 16px;border-radius:12px;overflow:hidden;}
+#cropCanvas{display:block;cursor:grab;touch-action:none;}
+#cropCanvas:active{cursor:grabbing;}
+.crop-modal-actions{display:flex;gap:10px;margin-top:18px;}
+.crop-modal-actions button{flex:1;}
 </style>
   <!-- Meta Pixel Code -->
   <script>
@@ -444,6 +454,22 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
 
 <div class="toast" id="toast"></div>
 
+<!-- AJUSTE DE FOTO: zoom + arrastar pra centralizar -->
+<div class="crop-modal" id="cropModal" style="display:none">
+  <div class="crop-modal-inner">
+    <h3>Ajuste sua foto</h3>
+    <p class="hint" style="margin-bottom:14px">Arraste para reposicionar e use o controle para dar zoom</p>
+    <div class="crop-canvas-wrap">
+      <canvas id="cropCanvas" width="280" height="373"></canvas>
+    </div>
+    <input type="range" id="cropZoom" min="100" max="300" value="100" style="width:100%;margin-top:14px"/>
+    <div class="crop-modal-actions">
+      <button class="btn-outline" id="cropCancelar">Cancelar</button>
+      <button class="btn-primary" id="cropConfirmar">Usar esta foto</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- Segmentação de pessoa (remoção de fundo) via MediaPipe — roda 100% no navegador, sem custo de API -->
@@ -503,22 +529,19 @@ let convenios = [];
 let currentUser = null;
 let existingId = null;
 let fotoFile = null;
+let fotoBlobFinal = null;
 let galeriaFiles = [];
 let galeriaUrls = [];
 let authMode = 'login';
+const $ = id => document.getElementById(id);
 
-/* Remove o fundo da foto (deixa só a pessoa) num canvas retangular transparente —
-   sem pintar nenhuma cor atrás; o branco do card aparece naturalmente por trás.
-   Se a segmentação falhar (ex: sem internet pro modelo), cai de volta pro recorte
-   simples — a foto original centralizada, sem remover o fundo real. */
-function compositarFotoDePerfil(file){
+/* Remove o fundo da foto (deixa só a pessoa) e devolve a imagem pronta pra compor —
+   sem pintar nenhuma cor atrás. Se a segmentação falhar (ex: sem internet pro
+   modelo), devolve a foto original sem remover o fundo real. */
+function segmentarFundo(file){
   return new Promise((resolve,reject)=>{
     const img=new Image();
     img.onload=async()=>{
-      const W=480,H=640;
-      const canvas=document.createElement('canvas');
-      canvas.width=W;canvas.height=H;
-      const ctx=canvas.getContext('2d');
       let source=img,srcW=img.width,srcH=img.height;
       try{
         const masked=await window.segmentarPessoa(img);
@@ -526,18 +549,94 @@ function compositarFotoDePerfil(file){
       }catch(err){
         console.warn('Remoção de fundo indisponível, usando foto original.',err);
       }
-      const scale=Math.min(W/srcW,H/srcH);
-      const w=srcW*scale,h=srcH*scale;
-      ctx.drawImage(source,(W-w)/2,(H-h)/2,w,h);
-      URL.revokeObjectURL(img.src);
-      canvas.toBlob(blob=>resolve(blob),'image/png');
+      resolve({source,srcW,srcH});
     };
     img.onerror=reject;
     img.src=URL.createObjectURL(file);
   });
 }
 
-const $ = id => document.getElementById(id);
+/* ---------- AJUSTE DE FOTO (zoom + arrastar) ---------- */
+const CROP_W=480,CROP_H=640;
+let cropSource=null,cropSrcW=0,cropSrcH=0;
+let cropZoom=1,cropPanX=0,cropPanY=0;
+let cropDragging=false,cropDragStartX=0,cropDragStartY=0,cropPanStartX=0,cropPanStartY=0;
+const cropCanvas=document.getElementById('cropCanvas');
+const cropCtx=cropCanvas.getContext('2d');
+
+function cropLimites(){
+  const escalaBase=Math.max(cropCanvas.width/cropSrcW,cropCanvas.height/cropSrcH)*cropZoom;
+  const imgW=cropSrcW*escalaBase,imgH=cropSrcH*escalaBase;
+  return {escalaBase,imgW,imgH,margemX:Math.max(0,(imgW-cropCanvas.width)/2),margemY:Math.max(0,(imgH-cropCanvas.height)/2)};
+}
+function cropClampPan(){
+  const {margemX,margemY}=cropLimites();
+  cropPanX=Math.max(-margemX,Math.min(margemX,cropPanX));
+  cropPanY=Math.max(-margemY,Math.min(margemY,cropPanY));
+}
+function desenharCropPreview(){
+  cropCtx.clearRect(0,0,cropCanvas.width,cropCanvas.height);
+  const {escalaBase,imgW,imgH}=cropLimites();
+  const x=(cropCanvas.width-imgW)/2+cropPanX;
+  const y=(cropCanvas.height-imgH)/2+cropPanY;
+  cropCtx.drawImage(cropSource,x,y,imgW,imgH);
+}
+function abrirCropModal(source,srcW,srcH){
+  cropSource=source;cropSrcW=srcW;cropSrcH=srcH;
+  cropZoom=1;cropPanX=0;cropPanY=0;
+  $('cropZoom').value=100;
+  desenharCropPreview();
+  $('cropModal').style.display='flex';
+}
+function cropPointerPos(e){
+  const r=cropCanvas.getBoundingClientRect();
+  const p=e.touches?e.touches[0]:e;
+  return {x:p.clientX-r.left,y:p.clientY-r.top};
+}
+cropCanvas.addEventListener('pointerdown',e=>{
+  cropDragging=true;
+  const p=cropPointerPos(e);
+  cropDragStartX=p.x;cropDragStartY=p.y;
+  cropPanStartX=cropPanX;cropPanStartY=cropPanY;
+  cropCanvas.setPointerCapture(e.pointerId);
+});
+cropCanvas.addEventListener('pointermove',e=>{
+  if(!cropDragging)return;
+  const p=cropPointerPos(e);
+  cropPanX=cropPanStartX+(p.x-cropDragStartX);
+  cropPanY=cropPanStartY+(p.y-cropDragStartY);
+  cropClampPan();
+  desenharCropPreview();
+});
+cropCanvas.addEventListener('pointerup',()=>{cropDragging=false;});
+cropCanvas.addEventListener('pointercancel',()=>{cropDragging=false;});
+$('cropZoom').oninput=e=>{
+  cropZoom=parseInt(e.target.value,10)/100;
+  cropClampPan();
+  desenharCropPreview();
+};
+$('cropCancelar').onclick=()=>{
+  $('cropModal').style.display='none';
+  fotoFile=null;fotoBlobFinal=null;
+  $('fotoInput').value='';
+};
+$('cropConfirmar').onclick=()=>{
+  const canvas=document.createElement('canvas');
+  canvas.width=CROP_W;canvas.height=CROP_H;
+  const ctx=canvas.getContext('2d');
+  const fator=CROP_W/cropCanvas.width;
+  const escalaBase=Math.max(CROP_W/cropSrcW,CROP_H/cropSrcH)*cropZoom;
+  const imgW=cropSrcW*escalaBase,imgH=cropSrcH*escalaBase;
+  const x=(CROP_W-imgW)/2+cropPanX*fator;
+  const y=(CROP_H-imgH)/2+cropPanY*fator;
+  ctx.drawImage(cropSource,x,y,imgW,imgH);
+  canvas.toBlob(blob=>{
+    fotoBlobFinal=blob;
+    $('fotoPreview').src=URL.createObjectURL(blob);$('fotoPreview').style.display='block';
+    $('cropModal').style.display='none';
+  },'image/png');
+};
+
 function toast(msg, type){const t=$('toast');t.textContent=msg;t.className='toast show'+(type?(' '+type):'');setTimeout(()=>t.className='toast',type==='err'?4000:2800);}
 function slugify(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-').replace(/-+/g,'-');}
 
@@ -640,8 +739,8 @@ $('fotoInput').onchange=async e=>{
   if(f.size>5*1024*1024){toast('A foto excede 5 MB','err');return;}
   fotoFile=f;
   toast('Removendo o fundo da foto…');
-  const blob=await compositarFotoDePerfil(f);
-  $('fotoPreview').src=URL.createObjectURL(blob);$('fotoPreview').style.display='block';
+  const {source,srcW,srcH}=await segmentarFundo(f);
+  abrirCropModal(source,srcW,srcH);
 };
 
 /* ---------- GALERIA DE FOTOS ----------
@@ -767,10 +866,9 @@ $('btnSave').onclick=async()=>{
       fotoUrl = (cur && cur.foto_url) ? cur.foto_url : null;
       jaAprovado = !!(cur && cur.aprovado);
     }
-    if(fotoFile){
-      const blob=await compositarFotoDePerfil(fotoFile);
+    if(fotoBlobFinal){
       const path=currentUser.id+'/foto.png';
-      const {error:upErr}=await sb.storage.from('perfis').upload(path,blob,{upsert:true,contentType:'image/png'});
+      const {error:upErr}=await sb.storage.from('perfis').upload(path,fotoBlobFinal,{upsert:true,contentType:'image/png'});
       if(upErr)throw upErr;
       const {data:pub}=sb.storage.from('perfis').getPublicUrl(path);
       fotoUrl=pub.publicUrl+'?t='+Date.now();
@@ -824,7 +922,7 @@ $('btnSave').onclick=async()=>{
       ({data,error}=await sb.from('profissionais').upsert(row,{onConflict:'user_id'}).select().single());
     }
     if(error)throw error;
-    existingId=data.id;fotoFile=null;galeriaFiles.forEach(p=>URL.revokeObjectURL(p.previewUrl));galeriaFiles=[];
+    existingId=data.id;fotoFile=null;fotoBlobFinal=null;galeriaFiles.forEach(p=>URL.revokeObjectURL(p.previewUrl));galeriaFiles=[];
     galeriaUrls=Array.isArray(data.fotos_urls)?data.fotos_urls.slice():galeriaUrls;renderGaleria();
     updateStatusBox(data);
     toast(jaAprovado?'Perfil atualizado com sucesso!':'Perfil enviado para aprovação!','ok');
