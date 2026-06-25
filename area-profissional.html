@@ -298,7 +298,7 @@ textarea{resize:vertical;min-height:90px;line-height:1.55;}
           <div class="upload-area" id="fotoArea">
             <div class="ico">⬆</div>
             <p>Arraste ou <span class="pick">selecione uma foto</span></p>
-            <p class="hint" style="margin-top:2px">JPG ou PNG · máx. 5 MB · o fundo é removido automaticamente</p>
+            <p class="hint" style="margin-top:2px">JPG ou PNG · máx. 5 MB · o fundo fica borrado automaticamente</p>
           </div>
           <input type="file" id="fotoInput" accept="image/jpeg,image/png,image/webp" style="display:none"/>
         </div>
@@ -535,57 +535,62 @@ let galeriaUrls = [];
 let authMode = 'login';
 const $ = id => document.getElementById(id);
 
-/* Remove o fundo da foto (deixa só a pessoa) e devolve a imagem pronta pra compor —
-   sem pintar nenhuma cor atrás. Se a segmentação falhar (ex: sem internet pro
-   modelo), devolve a foto original sem remover o fundo real. */
+/* Separa a pessoa do fundo (se a segmentação funcionar) e devolve junto a foto
+   original — o fundo da composição final é a própria foto borrada, com a
+   pessoa nítida por cima. Se a segmentação falhar (ex: sem internet pro
+   modelo), devolve só a original e o blur é aplicado na foto toda. */
 function segmentarFundo(file){
   return new Promise((resolve,reject)=>{
-    const img=new Image();
-    img.onload=async()=>{
-      let source=img,srcW=img.width,srcH=img.height;
+    const original=new Image();
+    original.onload=async()=>{
+      let pessoa=null;
       try{
-        const masked=await window.segmentarPessoa(img);
-        source=masked;srcW=masked.width;srcH=masked.height;
+        pessoa=await window.segmentarPessoa(original);
       }catch(err){
-        console.warn('Remoção de fundo indisponível, usando foto original.',err);
+        console.warn('Remoção de fundo indisponível, blur será aplicado na foto toda.',err);
       }
-      resolve({source,srcW,srcH});
+      resolve({original,pessoa,srcW:original.width,srcH:original.height});
     };
-    img.onerror=reject;
-    img.src=URL.createObjectURL(file);
+    original.onerror=reject;
+    original.src=URL.createObjectURL(file);
   });
 }
 
-/* ---------- AJUSTE DE FOTO (zoom + arrastar) ---------- */
+/* ---------- AJUSTE DE FOTO (zoom + arrastar + blur no fundo) ---------- */
 const CROP_W=480,CROP_H=640;
-const CROP_BG='#faf6f1';
-let cropSource=null,cropSrcW=0,cropSrcH=0;
+const CROP_BLUR_PREVIEW=6;
+let cropOriginal=null,cropPessoa=null,cropSrcW=0,cropSrcH=0;
 let cropZoom=1,cropPanX=0,cropPanY=0;
 let cropDragging=false,cropDragStartX=0,cropDragStartY=0,cropPanStartX=0,cropPanStartY=0;
 const cropCanvas=document.getElementById('cropCanvas');
 const cropCtx=cropCanvas.getContext('2d');
 
-function cropLimites(){
-  const escalaBase=Math.max(cropCanvas.width/cropSrcW,cropCanvas.height/cropSrcH)*cropZoom;
+function cropLimites(canvasW,canvasH){
+  const escalaBase=Math.max(canvasW/cropSrcW,canvasH/cropSrcH)*cropZoom;
   const imgW=cropSrcW*escalaBase,imgH=cropSrcH*escalaBase;
-  return {escalaBase,imgW,imgH,margemX:Math.max(0,(imgW-cropCanvas.width)/2),margemY:Math.max(0,(imgH-cropCanvas.height)/2)};
+  return {escalaBase,imgW,imgH,margemX:Math.max(0,(imgW-canvasW)/2),margemY:Math.max(0,(imgH-canvasH)/2)};
 }
 function cropClampPan(){
-  const {margemX,margemY}=cropLimites();
+  const {margemX,margemY}=cropLimites(cropCanvas.width,cropCanvas.height);
   cropPanX=Math.max(-margemX,Math.min(margemX,cropPanX));
   cropPanY=Math.max(-margemY,Math.min(margemY,cropPanY));
 }
+function desenharFundoBorrado(ctx,x,y,imgW,imgH,blurPx){
+  ctx.save();
+  ctx.filter='blur('+blurPx+'px)';
+  ctx.drawImage(cropOriginal,x,y,imgW,imgH);
+  ctx.restore();
+}
 function desenharCropPreview(){
   cropCtx.clearRect(0,0,cropCanvas.width,cropCanvas.height);
-  cropCtx.fillStyle=CROP_BG;
-  cropCtx.fillRect(0,0,cropCanvas.width,cropCanvas.height);
-  const {escalaBase,imgW,imgH}=cropLimites();
+  const {imgW,imgH}=cropLimites(cropCanvas.width,cropCanvas.height);
   const x=(cropCanvas.width-imgW)/2+cropPanX;
   const y=(cropCanvas.height-imgH)/2+cropPanY;
-  cropCtx.drawImage(cropSource,x,y,imgW,imgH);
+  desenharFundoBorrado(cropCtx,x,y,imgW,imgH,CROP_BLUR_PREVIEW);
+  if(cropPessoa)cropCtx.drawImage(cropPessoa,x,y,imgW,imgH);
 }
-function abrirCropModal(source,srcW,srcH){
-  cropSource=source;cropSrcW=srcW;cropSrcH=srcH;
+function abrirCropModal(original,pessoa,srcW,srcH){
+  cropOriginal=original;cropPessoa=pessoa;cropSrcW=srcW;cropSrcH=srcH;
   cropZoom=1;cropPanX=0;cropPanY=0;
   $('cropZoom').value=100;
   desenharCropPreview();
@@ -627,14 +632,12 @@ $('cropConfirmar').onclick=()=>{
   const canvas=document.createElement('canvas');
   canvas.width=CROP_W;canvas.height=CROP_H;
   const ctx=canvas.getContext('2d');
-  ctx.fillStyle=CROP_BG;
-  ctx.fillRect(0,0,CROP_W,CROP_H);
   const fator=CROP_W/cropCanvas.width;
-  const escalaBase=Math.max(CROP_W/cropSrcW,CROP_H/cropSrcH)*cropZoom;
-  const imgW=cropSrcW*escalaBase,imgH=cropSrcH*escalaBase;
+  const {imgW,imgH}=cropLimites(CROP_W,CROP_H);
   const x=(CROP_W-imgW)/2+cropPanX*fator;
   const y=(CROP_H-imgH)/2+cropPanY*fator;
-  ctx.drawImage(cropSource,x,y,imgW,imgH);
+  desenharFundoBorrado(ctx,x,y,imgW,imgH,CROP_BLUR_PREVIEW*fator);
+  if(cropPessoa)ctx.drawImage(cropPessoa,x,y,imgW,imgH);
   canvas.toBlob(blob=>{
     fotoBlobFinal=blob;
     $('fotoPreview').src=URL.createObjectURL(blob);$('fotoPreview').style.display='block';
@@ -743,9 +746,9 @@ $('fotoInput').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
   if(f.size>5*1024*1024){toast('A foto excede 5 MB','err');return;}
   fotoFile=f;
-  toast('Removendo o fundo da foto…');
-  const {source,srcW,srcH}=await segmentarFundo(f);
-  abrirCropModal(source,srcW,srcH);
+  toast('Aplicando efeito no fundo da foto…');
+  const {original,pessoa,srcW,srcH}=await segmentarFundo(f);
+  abrirCropModal(original,pessoa,srcW,srcH);
 };
 
 /* ---------- GALERIA DE FOTOS ----------
